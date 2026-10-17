@@ -1,0 +1,17 @@
+# Send only the inputs required by Maven to the build context.
+**
+!pom.xml
+!mvnw
+!.mvn/
+!.mvn/wrapper/
+!.mvn/wrapper/maven-wrapper.properties
+!src/
+!src/**
+
+# Never include local credentials or generated files inside source folders.
+**/.env
+**/.env.*
+**/*.local.yaml
+**/*.pem
+**/*.key
+**/target/

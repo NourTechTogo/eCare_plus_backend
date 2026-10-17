@@ -112,6 +112,11 @@ L'héritage utilisateur est persisté avec la stratégie JPA `JOINED`. Les donn�
 
 ## Démarrage rapide
 
+Pour construire le backend dans un conteneur et le connecter à PostgreSQL,
+suivre le [guide de déploiement Docker](docs/DEPLOIEMENT_DOCKER.md).
+Le `Dockerfile`, le `.dockerignore` et le fichier autonome
+`compose.deploy.yaml` sont fournis à la racine de ce projet Maven.
+
 Prérequis : Java 21, Docker Desktop démarré et Git.
 
 ```powershell
