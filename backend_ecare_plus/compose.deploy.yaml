@@ -1,8 +1,5 @@
-name: ecare-plus
-
 services:
   backend:
-    container_name: ecare-plus-backend
     build:
       context: .
       dockerfile: Dockerfile
@@ -31,7 +28,6 @@ services:
     stop_grace_period: 30s
 
   postgres:
-    container_name: ecare-plus-db
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
@@ -49,4 +45,3 @@ services:
 
 volumes:
   postgres-deploy-data:
-    name: ecare-plus_postgres-deploy-data

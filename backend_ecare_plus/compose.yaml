@@ -1,8 +1,5 @@
-name: ecare-plus-dev
-
 services:
   postgres:
-    container_name: ecare-plus-dev-db
     image: postgres:17-alpine
     environment:
       POSTGRES_DB: ecare_plus
@@ -20,4 +17,3 @@ services:
 
 volumes:
   postgres-data:
-    name: ecare-plus-dev_postgres-data
