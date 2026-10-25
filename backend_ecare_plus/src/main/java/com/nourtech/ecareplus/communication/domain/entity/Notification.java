@@ -48,6 +48,14 @@ public class Notification extends AbstractEntity {
     private Instant dateEnvoi;
 
     private Instant dateLecture;
+    private Instant dateArchivage;
+    private Instant dateSuppression;
+
+    public void archiver(Instant maintenant) { if(dateArchivage==null) dateArchivage=Objects.requireNonNull(maintenant); }
+    public void desarchiver() { dateArchivage=null; }
+    public void supprimerDeLaBoite(Instant maintenant) { if(dateSuppression==null) dateSuppression=Objects.requireNonNull(maintenant); }
+    public void restaurerDansLaBoite() { dateSuppression=null; }
+
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

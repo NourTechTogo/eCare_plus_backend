@@ -104,3 +104,11 @@ La configuration des fournisseurs est préparée dans [external-services.env.exa
 ## Publication indépendante — 25 octobre 2026
 
 Branche `ecare_backend_stable` publiée dans le dépôt backend uniquement, sans fusion dans main. Documentation et exemples de configuration inclus dans ce dépôt ; clés, bases, fichiers privés et artefacts de compilation exclus. Voir [validation et limites](docs/VALIDATION.md).
+
+## Notifications : archives et suppression privées — V30
+
+- Routes de boîte courante/archivée, archivage, désarchivage, suppression logique et restauration pour Annuler.
+- Lecture indépendante de l'archivage ; mutations privées, authentifiées, idempotentes et verrouillées. Une suppression de notification ne supprime pas le dossier, l'alerte ou le message lié.
+- Migration V30 nullable compatible avec les notifications existantes ; index de boîte. Filtrage partagé avec les listes web et l'ancienne route mobile.
+- 169 tests backend réussis, aucun ignoré, avec PostgreSQL 18.6 et validation des migrations V1 à V30. Tests d'accès étranger/non authentifié et du cycle archive/suppression/restauration ajoutés.
+- API locale relancée avec conservation de la base H2 fichier ; sauvegarde de cette base à l'arrêt avant l'évolution du schéma. Les journaux, données et secrets restent hors du dépôt.

@@ -4,7 +4,7 @@ Branche `ecare_backend_stable`. Projet indépendant des dépôts mobile et web. 
 
 ## Fonctionnalités livrées
 
-Authentification JWT et sessions révocables, profils et consentements, affectation des patients, six types de mesures, seuils et alertes, documents privés, prescriptions atomiques et observance, notifications et boîte d'envoi, notes liées aux ressources, référencement temporaire, messagerie avec pièces jointes privées et réessais idempotents, cycle de vie des appels LiveKit et révocation des accès. Migrations Flyway V1–V29.
+Authentification JWT et sessions révocables, profils et consentements, affectation des patients, six types de mesures, seuils et alertes, documents privés, prescriptions atomiques et observance, notifications et boîte d'envoi, notes liées aux ressources, référencement temporaire, messagerie avec pièces jointes privées et réessais idempotents, cycle de vie des appels LiveKit et révocation des accès. Migrations Flyway V1–V30.
 
 Consulter [les ajouts détaillés](AJOUTS_RECENTS.md), [le contrat API](docs/backend/API.md), [les appels](docs/backend/APPELS.md) et [la validation et les limites](docs/VALIDATION.md).
 

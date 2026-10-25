@@ -16,7 +16,7 @@ public class CommunicationPatientService {
     private final RappelRepository rappels; private final NotificationRepository notifications;
     public CommunicationPatientService(RappelRepository r, NotificationRepository n) { rappels=r; notifications=n; }
     public Page<RappelMobile> rappels(UUID patient, Pageable page) { portail.soi(patient,true); return rappels.findAllByPatientId(patient,page).map(RappelMobile::depuis); }
-    public Page<NotificationMobile> notifications(UUID user, Pageable page) { portail.soi(user,true); return notifications.findAllByUtilisateurId(user,page).map(NotificationMobile::depuis); }
+    public Page<NotificationMobile> notifications(UUID user, Pageable page) { portail.soi(user,true); return notifications.findAllByUtilisateurIdAndDateSuppressionIsNullAndDateArchivageIsNull(user,page).map(NotificationMobile::depuis); }
     @Transactional public void lireRappel(UUID patient, UUID id) { portail.soi(patient,true); Rappel r=rappels.findById(id).orElseThrow(()->new RessourceIntrouvableException("Rappel",id));
         if (!r.getPatient().getId().equals(patient)) throw new AccessDeniedException("Ce rappel ne vous appartient pas"); r.marquerCommeLu(); }
     @Transactional public void lireNotification(UUID user, UUID id) { portail.soi(user,true); Notification n=notifications.findById(id).orElseThrow(()->new RessourceIntrouvableException("Notification",id));

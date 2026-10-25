@@ -1,6 +1,6 @@
 # eCare+ Backend
 
-> Backend T1–T13 puis intégration Flutter/React réalisés le 25 octobre 2026 : [bilan actuel et limites](../docs/integration-clients/BILAN.md), [contrats API](../docs/backend/API.md), [recette initiale](../docs/backend/RECETTE.md). La suite backend finale compte 167 tests réussis, dont les tests PostgreSQL, sans test ignoré. La migration V28 ajoute la prescription atomique/idempotente ; V29 ajoute l’idempotence des messages. Les sections historiques ci-dessous décrivent le socle initial ; le bilan actuel précise les raccordements clients et ce qui attend encore les fournisseurs et les appareils.
+> Backend T1–T13 puis intégration Flutter/React réalisés le 25 octobre 2026 : [bilan actuel et limites](../docs/integration-clients/BILAN.md), [contrats API](../docs/backend/API.md), [recette initiale](../docs/backend/RECETTE.md). La suite backend finale compte 169 tests réussis, dont les tests PostgreSQL, sans test ignoré. La migration V28 ajoute la prescription atomique/idempotente ; V29 ajoute l’idempotence des messages. V30 ajoute l’archivage et la suppression logique des notifications. Les sections historiques ci-dessous décrivent le socle initial ; le bilan actuel précise les raccordements clients et ce qui attend encore les fournisseurs et les appareils.
 
 Backend de la plateforme togolaise de télésuivi eCare+, centrée dans son premier périmètre sur le diabète et l'hypertension.
 
