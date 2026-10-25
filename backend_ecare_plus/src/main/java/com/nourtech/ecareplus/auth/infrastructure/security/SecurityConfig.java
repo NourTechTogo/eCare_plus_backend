@@ -34,8 +34,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtDecoder jwtDecoder(JwtService jwtService) {
-        return jwtService.decoder();
+    JwtDecoder jwtDecoder(JwtService jwtService, com.nourtech.ecareplus.auth.application.service.SessionService sessions) {
+        JwtDecoder delegate = jwtService.decoder();
+        return token -> { var jwt = delegate.decode(token); sessions.verifier(jwt); return jwt; };
     }
 
     @Bean
@@ -51,13 +52,17 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/v1/integrations/appels/livekit", "/api/v1/integrations/notifications/callback").permitAll()
+                        .requestMatchers("/api/v1/auth/deconnexion", "/api/v1/compte/**", "/api/v1/compte").authenticated()
                         .requestMatchers("/api/v1/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                         .permitAll()
                         .requestMatchers("/api/v1/mobile/**").authenticated()
+                        .requestMatchers("/api/v1/notes", "/api/v1/notes/**", "/api/v1/appels/**").authenticated()
                         .requestMatchers("/api/v1/**")
                         .hasAnyRole("ADMINISTRATEUR_STRUCTURE", "MEDECIN", "INFIRMIER")
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(resourceServer -> resourceServer
+                        .bearerTokenResolver(request -> request.getRequestURI().equals("/api/v1/integrations/appels/livekit") ? null : new org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver().resolve(request))
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(converter))
                         .authenticationEntryPoint((request, response, exception) ->
                                 ecrireProbleme(response, objectMapper, 401, "Authentification requise",
@@ -94,6 +99,7 @@ public class SecurityConfig {
     ) throws IOException {
         ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(statut), detail);
         probleme.setTitle(titre);
+        probleme.setProperty("erreurs", List.of());
         response.setStatus(statut);
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         objectMapper.writeValue(response.getOutputStream(), probleme);

@@ -28,12 +28,14 @@ public class ConfirmationPriseService {
     }
 
     public ConfirmationPrise programmer(ProgrammerConfirmationPriseCommand commande) {
+        if(commande.datePrevue()==null)throw new IllegalArgumentException("Date de prise prévue obligatoire");
+        Instant datePrevue=commande.datePrevue().truncatedTo(java.time.temporal.ChronoUnit.MICROS);
         return confirmationRepository
-                .findByPriseMedicamentIdAndDatePrevue(commande.priseMedicamentId(), commande.datePrevue())
+                .findByPriseMedicamentIdAndDateInitiale(commande.priseMedicamentId(), datePrevue)
                 .orElseGet(() -> {
                     PriseMedicament prise = priseRepository.findById(commande.priseMedicamentId())
                             .orElseThrow(() -> new RessourceIntrouvableException("PriseMedicament", commande.priseMedicamentId()));
-                    return confirmationRepository.save(new ConfirmationPrise(prise, commande.datePrevue()));
+                    return confirmationRepository.save(new ConfirmationPrise(prise, datePrevue));
                 });
     }
 

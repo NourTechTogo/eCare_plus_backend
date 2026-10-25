@@ -23,11 +23,11 @@ public final class EspacePatientResponse {
 
     public record Mesure(UUID id, String typeMesure, BigDecimal valeurPrincipale,
                          BigDecimal valeurSecondaire, String unite, Instant dateMesure,
-                         String contexteMesure, String commentaire, boolean valeurConfirmee) {
+                         String contexteMesure, String commentaire, boolean valeurConfirmee, UUID patientId, String source, String sourceRef) {
         public static Mesure depuis(MesureSante source) {
             return new Mesure(source.getId(), source.getTypeMesure().name(), source.getValeurPrincipale(),
                     source.getValeurSecondaire(), source.getUnite(), source.getDateMesure(),
-                    source.getContexteMesure(), source.getCommentaire(), source.isValeurConfirmee());
+                    source.getContexteMesure(), source.getCommentaire(), source.isValeurConfirmee(),source.getPatient().getId(),source.getSource().name(),source.getSourceRef());
         }
     }
 }

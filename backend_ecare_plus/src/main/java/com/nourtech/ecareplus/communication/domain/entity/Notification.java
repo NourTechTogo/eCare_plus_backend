@@ -55,6 +55,11 @@ public class Notification extends AbstractEntity {
 
     @Column(nullable = false)
     private boolean sensible;
+    @Column(length=160) private String sourceRef;
+    public void lierSource(String source){sourceRef=source;}
+    @Column(length=40) private String typeRessource;
+    private java.util.UUID ressourceId;
+    public void rattacherRessource(String type,java.util.UUID id){if(id==null||!java.util.Set.of("ALERTE","CONVERSATION","TRAITEMENT","APPEL").contains(type))throw new IllegalArgumentException("Cible de notification invalide");typeRessource=type;ressourceId=id;}
 
     public Notification(
             Utilisateur utilisateur,

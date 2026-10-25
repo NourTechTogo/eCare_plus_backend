@@ -21,6 +21,8 @@ public class PriseMedicamentService {
     private final PriseMedicamentRepository priseRepository;
     private final TraitementRepository traitementRepository;
     private final MedicamentRepository medicamentRepository;
+    @org.springframework.beans.factory.annotation.Autowired private com.nourtech.ecareplus.communication.application.service.ChangementTraitementService changements;
+    @org.springframework.beans.factory.annotation.Autowired private PlanningHistoriqueService historique;
 
     public PriseMedicamentService(
             PriseMedicamentRepository priseRepository,
@@ -38,7 +40,7 @@ public class PriseMedicamentService {
         Medicament medicament = medicamentRepository.findById(commande.medicamentId())
                 .orElseThrow(() -> new RessourceIntrouvableException("Medicament", commande.medicamentId()));
 
-        return priseRepository.save(new PriseMedicament(
+        var prise=priseRepository.save(new PriseMedicament(
                 traitement,
                 medicament,
                 commande.quantite(),
@@ -49,23 +51,33 @@ public class PriseMedicamentService {
                 commande.voieAdministration(),
                 commande.consigne()
         ));
+        historique.revisions(prise);changements.notifier(prise);return prise;
     }
 
     public PriseMedicament modifierHoraire(UUID priseId, LocalTime heurePrevue, String frequence, String momentPrise) {
         PriseMedicament prise = charger(priseId);
+        historique.avant(prise);
         prise.modifierHoraire(heurePrevue, frequence, momentPrise);
+        historique.apres(prise);
+        changements.notifier(prise);
         return prise;
     }
 
     public PriseMedicament activer(UUID priseId) {
         PriseMedicament prise = charger(priseId);
+        historique.avant(prise);
         prise.activer();
+        historique.apres(prise);
+        changements.notifier(prise);
         return prise;
     }
 
     public PriseMedicament desactiver(UUID priseId) {
         PriseMedicament prise = charger(priseId);
+        historique.avant(prise);
         prise.desactiver();
+        historique.apres(prise);
+        changements.notifier(prise);
         return prise;
     }
 

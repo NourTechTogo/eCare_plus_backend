@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: ${APP_DOCUMENT_TAILLE_MAX:5242880}B
+      max-request-size: 6291456B
   application:
     name: ecare-plus
   datasource:
@@ -32,6 +36,19 @@ springdoc:
     path: /swagger-ui.html
 
 app:
+  notifications:
+    gateway-url: ${APP_NOTIFICATION_GATEWAY_URL:}
+    gateway-secret: ${APP_NOTIFICATION_GATEWAY_SECRET:}
+    tentatives-max: ${APP_NOTIFICATION_TENTATIVES_MAX:5}
+    delai-reprise-secondes: ${APP_NOTIFICATION_DELAI_REPRISE_SECONDES:30}
+  appels:
+    livekit-url: ${APP_LIVEKIT_URL:}
+    api-key: ${APP_LIVEKIT_API_KEY:}
+    api-secret: ${APP_LIVEKIT_API_SECRET:}
+    revocation-active: ${APP_LIVEKIT_REVOCATION_ACTIVE:false}
+  documents:
+    repertoire: ${APP_DOCUMENT_REPERTOIRE:./var/ecare-prive}
+    taille-max: ${APP_DOCUMENT_TAILLE_MAX:5242880}
   cors:
     allowed-origin-patterns: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*}
   security:

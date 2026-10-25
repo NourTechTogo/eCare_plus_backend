@@ -18,6 +18,14 @@ public record EnregistrerMesureCommand(
         String contexteMesure,
         String commentaire,
         SourceMesure source,
-        String statutSynchronisation
+        String statutSynchronisation,
+        String sourceRef
 ) {
+    public EnregistrerMesureCommand(UUID dossierId, UUID patientId, TypeMesure typeMesure,
+                                   BigDecimal valeurPrincipale, BigDecimal valeurSecondaire, String unite,
+                                   Instant dateMesure, String contexteMesure, String commentaire,
+                                   SourceMesure source, String statutSynchronisation) {
+        this(dossierId, patientId, typeMesure, valeurPrincipale, valeurSecondaire, unite, dateMesure,
+                contexteMesure, commentaire, source, statutSynchronisation, null);
+    }
 }

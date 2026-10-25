@@ -20,6 +20,8 @@ public class TraitementService {
 
     private final TraitementRepository traitementRepository;
     private final DossierSuiviRepository dossierRepository;
+    @org.springframework.beans.factory.annotation.Autowired private com.nourtech.ecareplus.communication.application.service.ChangementTraitementService changements;
+    @org.springframework.beans.factory.annotation.Autowired private PlanningHistoriqueService historique;
 
     public TraitementService(TraitementRepository traitementRepository, DossierSuiviRepository dossierRepository) {
         this.traitementRepository = traitementRepository;
@@ -33,7 +35,7 @@ public class TraitementService {
             throw new ConflitMetierException("Un traitement ne peut être ajouté que sur un dossier actif");
         }
 
-        return traitementRepository.save(new Traitement(
+        var traitement=traitementRepository.save(new Traitement(
                 dossier,
                 commande.libelle(),
                 commande.description(),
@@ -42,23 +44,33 @@ public class TraitementService {
                 commande.prescripteur(),
                 commande.consignesGenerales()
         ));
+        changements.notifier(traitement);return traitement;
     }
 
     public Traitement modifier(UUID traitementId, String libelle, String description, LocalDate dateFin, String consignesGenerales) {
         Traitement traitement = charger(traitementId);
+        historique.avant(traitement);
         traitement.modifier(libelle, description, dateFin, consignesGenerales);
+        historique.apres(traitement);
+        changements.notifier(traitement);
         return traitement;
     }
 
     public Traitement suspendre(UUID traitementId) {
         Traitement traitement = charger(traitementId);
+        historique.avant(traitement);
         traitement.suspendre();
+        historique.apres(traitement);
+        changements.notifier(traitement);
         return traitement;
     }
 
     public Traitement terminer(UUID traitementId) {
         Traitement traitement = charger(traitementId);
+        historique.avant(traitement);
         traitement.terminer();
+        historique.apres(traitement);
+        changements.notifier(traitement);
         return traitement;
     }
 

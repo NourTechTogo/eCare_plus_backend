@@ -1,1 +1,20 @@
 target/
+
+# Configuration et donnees locales privees
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.log
+*.mv.db
+*.trace.db
+*.sqlite
+*.sqlite3
+.maintenance/
+var/
+private-documents/

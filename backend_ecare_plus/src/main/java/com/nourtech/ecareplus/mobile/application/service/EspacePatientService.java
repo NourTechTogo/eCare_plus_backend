@@ -29,6 +29,9 @@ public class EspacePatientService {
     private final MesureSanteRepository mesures;
     private final MesureSanteService mesureSanteService;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.nourtech.ecareplus.portail.application.PortailService portail;
+
     public EspacePatientService(PatientRepository patients, DossierSuiviRepository dossiers,
                                 MesureSanteRepository mesures, MesureSanteService mesureSanteService) {
         this.patients = patients;
@@ -40,22 +43,25 @@ public class EspacePatientService {
     public ProfilAuthentifieResponse profil(UUID id) { return ProfilAuthentifieResponse.depuis(patient(id)); }
 
     public EspacePatientResponse.Dossier dossier(UUID id) {
+        portail.soi(id,true);
         return EspacePatientResponse.Dossier.depuis(dossierActif(id));
     }
 
     public Page<EspacePatientResponse.Mesure> mesures(UUID id, Pageable pageable) {
+        portail.soi(id,true);
         patient(id);
         return mesures.findAllByPatientId(id, pageable).map(EspacePatientResponse.Mesure::depuis);
     }
 
     @Transactional
     public EspacePatientResponse.Mesure enregistrer(UUID id, CreerMesureMobileRequest request) {
+        portail.soi(id,true);
         Patient patient = patient(id);
         DossierSuivi dossier = dossierActif(id);
         MesureSante mesure = mesureSanteService.enregistrer(new EnregistrerMesureCommand(
                 dossier.getId(), patient.getId(), request.typeMesure(), request.valeurPrincipale(),
                 request.valeurSecondaire(), request.unite(), request.dateMesure(), request.contexteMesure(),
-                request.commentaire(), SourceMesure.PATIENT, "SYNCHRONISEE"));
+                request.commentaire(), SourceMesure.PATIENT, "SYNCHRONISEE", request.sourceRef()));
         return EspacePatientResponse.Mesure.depuis(mesure);
     }
 
@@ -64,8 +70,6 @@ public class EspacePatientService {
     }
 
     private DossierSuivi dossierActif(UUID id) {
-        patient(id);
-        return dossiers.findFirstByPatientIdAndStatutOrderByDateOuvertureDesc(id, StatutDossier.ACTIF)
-                .orElseThrow(() -> new RessourceIntrouvableException("Dossier de suivi actif", id));
+        return portail.dossier(patient(id));
     }
 }

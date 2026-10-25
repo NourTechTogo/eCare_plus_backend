@@ -1,0 +1,6 @@
+# Explicit local demonstration profile. Requires an operator-supplied password.
+app:
+  demo:
+    password: ${APP_DEMO_PASSWORD:}
+  alertes:
+    seuils-demo: true

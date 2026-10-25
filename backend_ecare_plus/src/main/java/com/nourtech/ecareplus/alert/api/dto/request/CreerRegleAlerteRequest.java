@@ -8,6 +8,8 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
+import java.util.UUID;
+import jakarta.validation.constraints.Pattern;
 
 public record CreerRegleAlerteRequest(
         @NotBlank @Size(max = 150) String nom,
@@ -18,6 +20,10 @@ public record CreerRegleAlerteRequest(
         BigDecimal seuilMax,
         @NotNull @Positive Integer nombreOccurrences,
         @NotNull @Positive Integer periodeObservation,
-        @NotNull NiveauPriorite niveauPriorite
+        @NotNull NiveauPriorite niveauPriorite,
+        UUID patientId,
+        @Pattern(regexp = "PRINCIPALE|DIASTOLIQUE") String composante,
+        @Size(max = 20) String unite,
+        @Size(max = 100) String contexteMesure
 ) {
 }

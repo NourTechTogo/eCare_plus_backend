@@ -57,6 +57,21 @@ public class PriseMedicament extends AbstractEntity {
     @Column(nullable = false)
     private boolean actif;
 
+    @Column(nullable=false,length=80) private String fuseau = "UTC";
+    @Column(length=20) private String joursSemaine;
+
+    public void configurerPlanning(String fuseau, java.util.Set<Integer> jours) {
+        java.time.ZoneId.of(fuseau);
+        if(jours==null||jours.isEmpty()||jours.stream().anyMatch(j->j==null||j<1||j>7))throw new IllegalArgumentException("Jours de semaine invalides");
+        this.fuseau=fuseau;this.joursSemaine=jours.stream().sorted().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
+    }
+
+    public java.util.Set<Integer> joursPlanifies() {
+        if(joursSemaine!=null)return java.util.Arrays.stream(joursSemaine.split(",")).map(Integer::valueOf).collect(java.util.stream.Collectors.toSet());
+        if(java.util.Set.of("QUOTIDIEN","QUOTIDIENNE","TOUS_LES_JOURS").contains(frequence.toUpperCase(java.util.Locale.ROOT)))return java.util.Set.of(1,2,3,4,5,6,7);
+        return java.util.Set.of(); // Legacy free text is not a sufficiently precise prescription.
+    }
+
     public PriseMedicament(
             Traitement traitement,
             Medicament medicament,
@@ -76,7 +91,7 @@ public class PriseMedicament extends AbstractEntity {
         }
         this.unite = obligatoire(unite, "unite");
         this.frequence = obligatoire(frequence, "frequence");
-        this.heurePrevue = Objects.requireNonNull(heurePrevue, "heurePrevue");
+        this.heurePrevue = Objects.requireNonNull(heurePrevue, "heurePrevue").truncatedTo(java.time.temporal.ChronoUnit.MICROS);
         this.momentPrise = normaliser(momentPrise);
         this.voieAdministration = normaliser(voieAdministration);
         this.consigne = normaliser(consigne);
@@ -84,7 +99,7 @@ public class PriseMedicament extends AbstractEntity {
     }
 
     public void modifierHoraire(LocalTime heurePrevue, String frequence, String momentPrise) {
-        this.heurePrevue = Objects.requireNonNull(heurePrevue, "heurePrevue");
+        this.heurePrevue = Objects.requireNonNull(heurePrevue, "heurePrevue").truncatedTo(java.time.temporal.ChronoUnit.MICROS);
         this.frequence = obligatoire(frequence, "frequence");
         this.momentPrise = normaliser(momentPrise);
     }

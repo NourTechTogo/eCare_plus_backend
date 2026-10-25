@@ -391,7 +391,7 @@ class ApiControllerIntegrationTests {
                                 """.formatted(patientId)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.title").value("Requête invalide"))
-                .andExpect(jsonPath("$.detail").value("La valeur diastolique est obligatoire pour une tension artérielle"));
+                .andExpect(jsonPath("$.detail").value("valeurSecondaire (diastolique) est obligatoire"));
     }
 
     @Test

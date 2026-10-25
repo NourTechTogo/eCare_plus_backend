@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface PatientRepository extends JpaRepository<Patient, UUID> {
+public interface PatientRepository extends JpaRepository<Patient, UUID>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<Patient> {
 
     Optional<Patient> findByNumeroPatient(String numeroPatient);
 

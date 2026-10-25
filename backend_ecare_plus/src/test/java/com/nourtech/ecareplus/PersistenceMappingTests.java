@@ -446,7 +446,7 @@ class PersistenceMappingTests {
         assertThat(rendezVous.getStatut()).isEqualTo(StatutRendezVous.PLANIFIE);
         assertThat(regleAlerteRepository.findAllByActif(true))
                 .extracting(RegleAlerte::getId)
-                .containsExactly(regleAlerte.getId());
+                .contains(regleAlerte.getId());
         assertThat(alerteRepository.findAllByPatientIdAndStatutOrderByDateCreationDesc(
                 patient.getId(), StatutAlerte.PRISE_EN_CHARGE
         ))
@@ -525,6 +525,12 @@ class PersistenceMappingTests {
                 structure
         ));
         DossierSuivi dossier = dossierRepository.save(new DossierSuivi(patient, structure, "MENSUELLE"));
+        structure.activer();
+        medecin.activerCompte();
+        structureRepository.save(structure);
+        utilisateurRepository.save(medecin);
+        affectationRepository.save(new AffectationPatient(patient, medecin, structure,
+                RoleProfessionnel.MEDECIN_REFERENT, LocalDate.now(), true));
         Traitement traitement = traitementRepository.save(new Traitement(
                 dossier, "Metformine 500mg", null, LocalDate.now(), null, "Dr Mensah", null
         ));

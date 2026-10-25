@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
+import com.nourtech.ecareplus.care.domain.value.ValeurMesure;
 
 @Getter
 @Entity
@@ -67,6 +68,9 @@ public class MesureSante extends AbstractEntity {
     @Column(length = 30)
     private String statutSynchronisation;
 
+    @Column(length = 100)
+    private String sourceRef;
+
     @Column(nullable = false)
     private boolean valeurConfirmee;
 
@@ -86,15 +90,16 @@ public class MesureSante extends AbstractEntity {
         this.patient = Objects.requireNonNull(patient, "patient");
         this.dossier = Objects.requireNonNull(dossier, "dossier");
         this.typeMesure = Objects.requireNonNull(typeMesure, "typeMesure");
-        this.valeurPrincipale = Objects.requireNonNull(valeurPrincipale, "valeurPrincipale");
-        this.valeurSecondaire = valeurSecondaire;
-        this.unite = obligatoire(unite, "unite");
-        this.dateMesure = Objects.requireNonNull(dateMesure, "dateMesure");
+        appliquerValeur(ValeurMesure.normaliser(typeMesure, valeurPrincipale, valeurSecondaire, unite));
+        // PostgreSQL persists timestamps at microsecond precision. Normalize before saving so
+        // a retry with the original nanosecond timestamp compares to the exact same instant.
+        this.dateMesure = Objects.requireNonNull(dateMesure, "dateMesure")
+                .truncatedTo(java.time.temporal.ChronoUnit.MICROS);
+        if (dateMesure.isAfter(Instant.now())) throw new IllegalArgumentException("dateMesure ne peut pas être dans le futur");
         this.contexteMesure = normaliser(contexteMesure);
         this.commentaire = normaliser(commentaire);
         this.source = Objects.requireNonNull(source, "source");
         this.statutSynchronisation = normaliser(statutSynchronisation);
-        verifierPlausibilite();
         this.valeurConfirmee = false;
     }
 
@@ -108,12 +113,26 @@ public class MesureSante extends AbstractEntity {
         if (valeurConfirmee) {
             throw new IllegalStateException("Une mesure confirmée ne peut plus être modifiée, il faut en saisir une nouvelle");
         }
-        this.valeurPrincipale = Objects.requireNonNull(valeurPrincipale, "valeurPrincipale");
-        this.valeurSecondaire = valeurSecondaire;
-        this.unite = obligatoire(unite, "unite");
+        // Validate everything before mutating a managed entity.
+        ValeurMesure normalisee = ValeurMesure.normaliser(typeMesure, valeurPrincipale, valeurSecondaire, unite);
+        appliquerValeur(normalisee);
         this.contexteMesure = normaliser(contexteMesure);
         this.commentaire = normaliser(commentaire);
-        verifierPlausibilite();
+    }
+
+    public void definirSourceRef(String reference) {
+        String normalisee = normaliser(reference);
+        if (normalisee != null && normalisee.length() > 100)
+            throw new IllegalArgumentException("sourceRef doit contenir au plus 100 caractères");
+        if (sourceRef != null && !sourceRef.equals(normalisee))
+            throw new IllegalStateException("La référence source d'une mesure est immuable");
+        this.sourceRef = normalisee;
+    }
+
+    private void appliquerValeur(ValeurMesure valeur) {
+        this.valeurPrincipale = valeur.principale();
+        this.valeurSecondaire = valeur.secondaire();
+        this.unite = valeur.unite();
     }
 
     public void confirmer() {
@@ -121,52 +140,6 @@ public class MesureSante extends AbstractEntity {
             throw new IllegalStateException("La mesure est déjà confirmée");
         }
         this.valeurConfirmee = true;
-    }
-
-    private void verifierPlausibilite() {
-        switch (typeMesure) {
-            case TENSION_ARTERIELLE -> {
-                verifierPlage("valeurPrincipale (systolique)", valeurPrincipale, 40, 260);
-                if (valeurSecondaire == null) {
-                    throw new IllegalArgumentException("La valeur diastolique est obligatoire pour une tension artérielle");
-                }
-                verifierPlage("valeurSecondaire (diastolique)", valeurSecondaire, 20, 200);
-                if (valeurPrincipale.compareTo(valeurSecondaire) <= 0) {
-                    throw new IllegalArgumentException("La systolique doit être supérieure à la diastolique");
-                }
-            }
-            case GLYCEMIE -> {
-                verifierPlage("valeurPrincipale", valeurPrincipale, 10, 700);
-                verifierAbsente(valeurSecondaire);
-            }
-            case POIDS -> {
-                verifierPlage("valeurPrincipale", valeurPrincipale, 1, 400);
-                verifierAbsente(valeurSecondaire);
-            }
-            case FREQUENCE_CARDIAQUE -> {
-                verifierPlage("valeurPrincipale", valeurPrincipale, 20, 250);
-                verifierAbsente(valeurSecondaire);
-            }
-        }
-    }
-
-    private static void verifierPlage(String champ, BigDecimal valeur, int min, int max) {
-        if (valeur.compareTo(BigDecimal.valueOf(min)) < 0 || valeur.compareTo(BigDecimal.valueOf(max)) > 0) {
-            throw new IllegalArgumentException(champ + " doit être compris entre " + min + " et " + max);
-        }
-    }
-
-    private static void verifierAbsente(BigDecimal valeurSecondaire) {
-        if (valeurSecondaire != null) {
-            throw new IllegalArgumentException("Une valeur secondaire n'est pas attendue pour ce type de mesure");
-        }
-    }
-
-    private static String obligatoire(String valeur, String champ) {
-        if (valeur == null || valeur.isBlank()) {
-            throw new IllegalArgumentException(champ + " est obligatoire");
-        }
-        return valeur.trim();
     }
 
     private static String normaliser(String valeur) {

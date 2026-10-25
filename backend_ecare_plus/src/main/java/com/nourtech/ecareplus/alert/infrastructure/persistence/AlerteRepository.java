@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.UUID;
 
-public interface AlerteRepository extends JpaRepository<Alerte, UUID> {
+public interface AlerteRepository extends JpaRepository<Alerte, UUID>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<Alerte> {
 
     List<Alerte> findAllByPatientIdAndStatutOrderByDateCreationDesc(UUID patientId, StatutAlerte statut);
 

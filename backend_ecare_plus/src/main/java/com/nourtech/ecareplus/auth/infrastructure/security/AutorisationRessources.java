@@ -65,10 +65,12 @@ public class AutorisationRessources {
 
     public void verifier(Method method, Object[] args) {
         Utilisateur actor = acteur();
+        if (method.getDeclaringClass().isAnnotationPresent(AccesVerifieParService.class)) return;
         String controller = method.getDeclaringClass().getSimpleName();
         // These controllers derive ownership from the JWT and validate membership themselves.
-        if (Set.of("EspacePatientController", "CommunicationPatientController", "MessagerieController").contains(controller)) return;
+        if (Set.of("EspacePatientController", "CommunicationPatientController", "MessagerieController", "PortailController", "CompteController").contains(controller)) return;
         boolean read = method.isAnnotationPresent(GetMapping.class);
+        if(!read&&(Set.of("TraitementController","PriseMedicamentController").contains(controller)||(controller.equals("DossierSuiviController")&&method.getName().equals("ajouterTraitement"))))require(actor instanceof Medecin);
         boolean onboarding = controller.equals("DossierSuiviController") && method.getName().equals("ouvrir");
         if (ADMINISTRATION.contains(controller) || onboarding
                 || (Set.of("PatientController", "ProcheAidantController").contains(controller) && !read)) {
@@ -127,7 +129,8 @@ public class AutorisationRessources {
     public boolean conversationAccessible(Conversation conversation, UUID utilisateurId) {
         Utilisateur actor = acteur();
         if (!actor.getId().equals(utilisateurId)) return false;
-        if (actor instanceof Patient) return conversation.getPatient().getId().equals(utilisateurId);
+        if (actor instanceof Patient) return conversation.getPatient().getId().equals(utilisateurId)
+                && echangeAutorise(conversation.getPatient(), conversation.getProfessionnel());
         return actor instanceof ProfessionnelSante && conversation.getProfessionnel().getId().equals(utilisateurId)
                 && echangeAutorise(conversation.getPatient(), conversation.getProfessionnel());
     }
@@ -182,7 +185,14 @@ public class AutorisationRessources {
                         .setParameter("id", p.getId()).getResultList();
                 require(links.stream().anyMatch(a -> a.estValideA(Instant.now()) && patientAccessible(a.getPatient(), actor, clinical)));
             }
-            case RegleAlerte ignored -> { /* shared clinical reference catalog, physician writes only */ }
+            case RegleAlerte regle -> {
+                if (regle.getStructureId() == null) require(read);
+                else require(regle.getStructureId().equals(structureId(actor)));
+                if (regle.getPatientId() != null) {
+                    Patient cible = em.find(Patient.class, regle.getPatientId());
+                    require(cible != null && patientAccessible(cible, actor, true));
+                }
+            }
             case Medicament ignored -> { /* shared medication catalog, physician writes only */ }
             default -> throw denied();
         }
@@ -190,7 +200,7 @@ public class AutorisationRessources {
 
     private void patient(Patient p, Utilisateur actor, boolean clinical) { require(patientAccessible(p, actor, clinical)); }
 
-    private boolean patientAccessible(Patient p, Utilisateur actor, boolean clinical) {
+    public boolean patientAccessible(Patient p, Utilisateur actor, boolean clinical) {
         UUID structure = structureId(actor);
         LocalDate today = LocalDate.now(ZoneOffset.UTC);
         boolean assigned = affectations.findAllByPatientIdAndStatut(p.getId(), StatutAffectation.ACTIVE).stream()
@@ -211,7 +221,7 @@ public class AutorisationRessources {
         };
     }
 
-    private Utilisateur acteur() {
+    public Utilisateur acteur() {
         if (!(SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken token)) throw denied();
         UUID id;
         try { id = UUID.fromString(token.getToken().getSubject()); } catch (IllegalArgumentException invalid) { throw denied(); }

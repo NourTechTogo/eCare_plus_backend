@@ -21,6 +21,9 @@ public class InscriptionPatientService {
     private final MotDePasseService motDePasseService;
     private final PatientRepository patientRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.nourtech.ecareplus.consent.infrastructure.persistence.ConsentementRepository consentements;
+
     public InscriptionPatientService(
             GestionPatientService gestionPatientService,
             MotDePasseService motDePasseService,
@@ -32,6 +35,11 @@ public class InscriptionPatientService {
     }
 
     public Patient inscrire(InscriptionPatientRequest request) {
+        com.nourtech.ecareplus.portail.application.PortailService.validerPassword(request.motDePasse());
+        if (!request.consentementAccepte() || !request.cguLues() || !request.confidentialiteLue()
+                || request.versionDocument() == null || request.versionDocument().isBlank()) {
+            throw new IllegalArgumentException("L'inscription exige la lecture et l'acceptation des CGU et de la confidentialité");
+        }
         Patient patient = gestionPatientService.creer(new CreerPatientCommand(
                 genererNumeroPatient(),
                 request.nom(),
@@ -44,6 +52,12 @@ public class InscriptionPatientService {
                 "fr"
         ));
         patient.activerCompte();
+        if(request.consentementAccepte()) {
+            if(!request.cguLues()||!request.confidentialiteLue()||request.versionDocument()==null||request.versionDocument().isBlank())throw new IllegalArgumentException("Lecture des CGU et confidentialité requise");
+            var attrs=(org.springframework.web.context.request.ServletRequestAttributes)org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+            String ip=attrs==null?"non-disponible":attrs.getRequest().getRemoteAddr();
+            consentements.save(new com.nourtech.ecareplus.consent.domain.entity.Consentement(patient,"SUIVI_MEDICAL","CGU et confidentialité lues et acceptées personnellement",request.versionDocument(),ip,java.time.Instant.now()));
+        }
         return patient;
     }
 

@@ -78,6 +78,10 @@ public class Alerte extends AbstractEntity {
     @Column(columnDefinition = "text")
     private String motifCloture;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cloturee_par_id")
+    private ProfessionnelSante clotureePar;
+
     public Alerte(
             Patient patient,
             MesureSante mesure,
@@ -136,10 +140,15 @@ public class Alerte extends AbstractEntity {
     }
 
     public void cloturer(String motifCloture, Instant maintenant) {
+        cloturer(motifCloture, maintenant, null);
+    }
+
+    public void cloturer(String motifCloture, Instant maintenant, ProfessionnelSante auteur) {
         verifierNonCloturee();
         this.statut = StatutAlerte.CLOTUREE;
         this.dateCloture = Objects.requireNonNull(maintenant, "maintenant");
         this.motifCloture = obligatoire(motifCloture, "motifCloture");
+        this.clotureePar = auteur;
     }
 
     public void rouvrir() {
@@ -149,6 +158,7 @@ public class Alerte extends AbstractEntity {
         this.statut = StatutAlerte.NOUVELLE;
         this.dateCloture = null;
         this.motifCloture = null;
+        this.clotureePar = null;
     }
 
     private void verifierNonCloturee() {

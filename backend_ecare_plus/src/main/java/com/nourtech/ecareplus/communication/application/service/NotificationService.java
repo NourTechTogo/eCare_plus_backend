@@ -40,6 +40,7 @@ public class NotificationService {
 
     public Notification envoyer(UUID notificationId, Instant maintenant) {
         Notification notification = charger(notificationId);
+        verifierPublicationInterne(notification);
         notification.envoyer(maintenant);
         return notification;
     }
@@ -52,6 +53,7 @@ public class NotificationService {
 
     public Notification reessayerEnvoi(UUID notificationId, Instant maintenant) {
         Notification notification = charger(notificationId);
+        verifierPublicationInterne(notification);
         notification.reessayerEnvoi(maintenant);
         return notification;
     }
@@ -76,4 +78,5 @@ public class NotificationService {
         return notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RessourceIntrouvableException("Notification", notificationId));
     }
+    private static void verifierPublicationInterne(Notification notification){if(notification.getCanal()!=com.nourtech.ecareplus.communication.domain.enumeration.CanalNotification.APPLICATION)throw new com.nourtech.ecareplus.shared.application.exception.ConflitMetierException("L'envoi externe exige un transport et son accusé fournisseur ; cette route ne peut pas l'attester");}
 }

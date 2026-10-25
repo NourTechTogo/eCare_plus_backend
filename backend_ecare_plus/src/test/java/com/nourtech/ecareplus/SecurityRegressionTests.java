@@ -119,7 +119,7 @@ class SecurityRegressionTests {
     @Test void compteSuspenduNeConservePasLaccesAvecSonAncienJwt() throws Exception {
         jdbc.update("update utilisateur set statut_compte = 'SUSPENDU' where id = ?", doctor);
         mvc.perform(get("/api/v1/mesures-sante/{id}", measure).header("Authorization", bearer(doctorToken)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test void listesAlertesExcluentLesMesuresDesAutresStructures() throws Exception {
@@ -178,7 +178,7 @@ class SecurityRegressionTests {
                 .header("Authorization", bearer(patientToken)).contentType("application/json")
                 .content("{\"contenu\":\"Bonjour\"}")).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/mobile/conversations/{id}/messages", conversation)
-                .header("Authorization", bearer(patientToken))).andExpect(status().isOk());
+                .header("Authorization", bearer(patientToken))).andExpect(status().isForbidden());
     }
 
     @Test void messagerieRefuseUnProfessionnelSuspenduEtUnConsentementRetire() throws Exception {

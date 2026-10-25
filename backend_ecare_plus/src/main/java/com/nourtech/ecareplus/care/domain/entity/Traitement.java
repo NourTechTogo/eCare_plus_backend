@@ -90,8 +90,8 @@ public class Traitement extends AbstractEntity {
             throw new IllegalStateException("Le traitement est déjà terminé");
         }
         this.statut = StatutTraitement.TERMINE;
-        if (dateFin == null) {
-            this.dateFin = LocalDate.now();
+        if (dateFin == null && !dateDebut.isAfter(LocalDate.now(java.time.ZoneOffset.UTC))) {
+            this.dateFin = LocalDate.now(java.time.ZoneOffset.UTC);
         }
     }
 

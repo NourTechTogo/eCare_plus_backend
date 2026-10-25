@@ -17,10 +17,11 @@ public record CreerAdministrateurStructureRequest(
         @Past LocalDate dateNaissance,
         @Size(max = 30) String telephone,
         @Email @Size(max = 254) String email,
-        @NotBlank @Size(min = 12, max = 128) String motDePasse,
+        @NotBlank @Size(min = 12, max = 72) @jakarta.validation.constraints.Pattern(regexp="(?s)(?=.*[A-Za-z])(?=.*[0-9]).+") String motDePasse,
         @NotBlank @Size(max = 10) String languePreferee,
         @NotBlank @Size(max = 120) String fonctionAdministrative,
         @NotBlank @Size(max = 50) String niveauAcces,
         @NotNull UUID structureId
 ) {
 }
+

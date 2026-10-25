@@ -48,6 +48,9 @@ class AuthentificationIntegrationTests {
     private MotDePasseService motDePasseService;
 
     @Autowired
+    private com.nourtech.ecareplus.consent.infrastructure.persistence.ConsentementRepository consentements;
+
+    @Autowired
     private com.nourtech.ecareplus.auth.infrastructure.security.JwtProperties jwtProperties;
 
     @Test
@@ -75,6 +78,32 @@ class AuthentificationIntegrationTests {
         assertThat(patient.getStatutCompte()).isEqualTo(StatutCompte.ACTIF);
         assertThat(patient.getMotDePasseHash()).isNotEqualTo("MotDePasseSolide!2026");
         assertThat(motDePasseService.correspond("MotDePasseSolide!2026", patient.getMotDePasseHash())).isTrue();
+        assertThat(consentements.findAllByPatientIdAndStatut(patient.getId(),
+                com.nourtech.ecareplus.consent.domain.enumeration.StatutConsentement.ACCORDE))
+                .singleElement().satisfies(consentement -> {
+                    assertThat(consentement.getVersionDocument()).isEqualTo("2026-1");
+                    assertThat(consentement.getAdresseIp()).isNotBlank();
+                    assertThat(consentement.getDateAcceptation()).isNotNull();
+                });
+    }
+
+    @Test
+    void inscriptionSansPreuveCompleteNeCreeAucunCompte() throws Exception {
+        String email = "consentement-manquant@example.test";
+        String valide = inscriptionJson(email, "+22890001999");
+        for (String invalide : java.util.List.of(
+                valide.replace("\"consentementAccepte\": true", "\"consentementAccepte\": false"),
+                valide.replace("\"cguLues\": true", "\"cguLues\": false"),
+                valide.replace("\"confidentialiteLue\": true", "\"confidentialiteLue\": false"),
+                valide.replace("\"versionDocument\": \"2026-1\"", "\"versionDocument\": null"))) {
+            mockMvc.perform(post("/api/v1/auth/inscription").contentType(MediaType.APPLICATION_JSON).content(invalide))
+                    .andExpect(status().isBadRequest());
+            assertThat(utilisateurRepository.findByEmailIgnoreCase(email)).isEmpty();
+        }
+        mockMvc.perform(post("/api/v1/auth/inscription").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nom\":\"Ayi\",\"prenoms\":\"Ama\",\"email\":\"consentement-manquant@example.test\",\"telephone\":\"+22890001999\",\"motDePasse\":\"MotDePasseSolide!2026\"}"))
+                .andExpect(status().isBadRequest());
+        assertThat(utilisateurRepository.findByEmailIgnoreCase(email)).isEmpty();
     }
 
     @Test
@@ -218,7 +247,11 @@ class AuthentificationIntegrationTests {
                   "prenoms": " Ama ",
                   "email": "%s",
                   "telephone": "%s",
-                  "motDePasse": "MotDePasseSolide!2026"
+                  "motDePasse": "MotDePasseSolide!2026",
+                  "consentementAccepte": true,
+                  "cguLues": true,
+                  "confidentialiteLue": true,
+                  "versionDocument": "2026-1"
                 }
                 """.formatted(email, telephone);
     }

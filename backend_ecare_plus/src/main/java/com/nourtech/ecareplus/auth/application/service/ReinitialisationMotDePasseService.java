@@ -38,6 +38,7 @@ public class ReinitialisationMotDePasseService {
         demande.verifier(empreinte(jeton)); return jeton;
     }
     public void reinitialiser(String jeton, String nouveau) {
+        com.nourtech.ecareplus.portail.application.PortailService.validerPassword(nouveau);
         if (jeton == null || !jeton.matches("[A-Za-z0-9_-]{43}")) throw invalide();
         DemandeReinitialisation demande = demandes.findFirstByJetonHashAndUtiliseeFalse(empreinte(jeton)).orElseThrow(this::invalide);
         if (!demande.isVerifiee() || !demande.getExpireLe().isAfter(Instant.now())) throw invalide();

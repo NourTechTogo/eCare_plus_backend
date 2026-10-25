@@ -10,6 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.EntityManager;
+import com.nourtech.ecareplus.identity.domain.entity.ProfessionnelSante;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 @Service
 @Transactional
@@ -17,12 +22,15 @@ public class RegleAlerteService {
 
     private final RegleAlerteRepository regleAlerteRepository;
 
+    @PersistenceContext
+    private EntityManager em;
+
     public RegleAlerteService(RegleAlerteRepository regleAlerteRepository) {
         this.regleAlerteRepository = regleAlerteRepository;
     }
 
     public RegleAlerte creer(CreerRegleAlerteCommand commande) {
-        return regleAlerteRepository.save(new RegleAlerte(
+        RegleAlerte regle = new RegleAlerte(
                 commande.nom(),
                 commande.description(),
                 commande.typeMesure(),
@@ -32,7 +40,16 @@ public class RegleAlerteService {
                 commande.nombreOccurrences(),
                 commande.periodeObservation(),
                 commande.niveauPriorite()
-        ));
+        );
+        UUID structureId = null;
+        if (SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken token) {
+            ProfessionnelSante professionnel = em.find(ProfessionnelSante.class, UUID.fromString(token.getToken().getSubject()));
+            if (professionnel == null) throw new org.springframework.security.access.AccessDeniedException("Réservé au professionnel de santé");
+            structureId = professionnel.getStructure().getId();
+        }
+        regle.definirPortee(commande.patientId(), structureId, commande.composante(), commande.unite());
+        regle.definirContexte(commande.contexteMesure());
+        return regleAlerteRepository.save(regle);
     }
 
     public RegleAlerte modifier(
@@ -52,6 +69,7 @@ public class RegleAlerteService {
     public RegleAlerte valider(UUID regleId, Instant maintenant) {
         RegleAlerte regle = charger(regleId);
         regle.validerRegle(maintenant);
+        if(SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken token)regle.tracerValidation(UUID.fromString(token.getToken().getSubject()),"MEDECIN");
         return regle;
     }
 

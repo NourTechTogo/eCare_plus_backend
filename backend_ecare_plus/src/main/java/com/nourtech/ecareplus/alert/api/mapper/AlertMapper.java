@@ -23,7 +23,7 @@ public class AlertMapper {
         return new CreerRegleAlerteCommand(
                 request.nom(), request.description(), request.typeMesure(), request.operateur(),
                 request.seuilMin(), request.seuilMax(), request.nombreOccurrences(),
-                request.periodeObservation(), request.niveauPriorite()
+                request.periodeObservation(), request.niveauPriorite(), request.patientId(), request.composante(), request.unite(), request.contexteMesure()
         );
     }
 
@@ -32,7 +32,8 @@ public class AlertMapper {
                 regle.getId(), regle.getNom(), regle.getDescription(), regle.getTypeMesure(),
                 regle.getOperateur(), regle.getSeuilMin(), regle.getSeuilMax(), regle.getNombreOccurrences(),
                 regle.getPeriodeObservation(), regle.getNiveauPriorite(), regle.isActif(),
-                regle.getDateValidation(), regle.getVersion()
+                regle.getDateValidation(), regle.getVersion(), regle.getPatientId(), regle.getStructureId(),
+                regle.getComposante(), regle.getUnite(), regle.getContexteMesure()
         );
     }
 

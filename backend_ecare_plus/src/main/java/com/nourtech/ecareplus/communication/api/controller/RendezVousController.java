@@ -19,6 +19,19 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.UUID;
+import java.util.List;
+import java.util.Map;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import jakarta.persistence.EntityManager;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
+import com.nourtech.ecareplus.auth.infrastructure.security.AutorisationRessources;
+import com.nourtech.ecareplus.identity.domain.entity.ProfessionnelSante;
+import com.nourtech.ecareplus.identity.domain.enumeration.StatutCompte;
+import com.nourtech.ecareplus.organization.domain.enumeration.StatutAffectation;
+import com.nourtech.ecareplus.consent.domain.enumeration.StatutConsentement;
 
 @RestController
 @RequestMapping("/api/v1/rendez-vous")
@@ -26,10 +39,43 @@ public class RendezVousController {
 
     private final RendezVousService service;
     private final CommunicationMapper mapper;
+    private final EntityManager em;
+    private final AutorisationRessources acces;
 
-    public RendezVousController(RendezVousService service, CommunicationMapper mapper) {
+    public RendezVousController(RendezVousService service, CommunicationMapper mapper, EntityManager em, AutorisationRessources acces) {
         this.service = service;
         this.mapper = mapper;
+        this.em = em;
+        this.acces = acces;
+    }
+
+    @GetMapping @Transactional(readOnly=true)
+    public List<Map<String,Object>> lister(@RequestParam(required=false) UUID patientId) {
+        var professionnel=(ProfessionnelSante)acces.acteur();
+        var resultats=em.createQuery("""
+                select r from RendezVous r join fetch r.patient p
+                where (:patient is null or p.id=:patient) and p.statutCompte=:compte
+                and exists (select a.id from AffectationPatient a where a.patient=p
+                    and a.professionnel.id=:professionnel and a.structure.id=:structure
+                    and a.statut=:affectation and a.dateDebut<=:jour
+                    and (a.dateFin is null or a.dateFin>=:jour))
+                and exists (select c.id from Consentement c where c.patient=p
+                    and c.statut=:consentement and c.dateAcceptation<=:maintenant
+                    and (c.dateRetrait is null or c.dateRetrait>:maintenant))
+                order by r.dateHeure asc, r.id asc
+                """,RendezVous.class)
+                .setParameter("patient",patientId).setParameter("compte",StatutCompte.ACTIF)
+                .setParameter("professionnel",professionnel.getId()).setParameter("structure",professionnel.getStructure().getId())
+                .setParameter("affectation",StatutAffectation.ACTIVE).setParameter("jour",LocalDate.now(ZoneOffset.UTC))
+                .setParameter("consentement",StatutConsentement.ACCORDE).setParameter("maintenant",Instant.now()).getResultList();
+        return resultats.stream().map(r->{
+            Map<String,Object> vue=new java.util.LinkedHashMap<>();
+            vue.put("id",r.getId());vue.put("patientId",r.getPatient().getId());
+            vue.put("patientNom",r.getPatient().getPrenoms()+" "+r.getPatient().getNom());
+            vue.put("numeroPatient",r.getPatient().getNumeroPatient());vue.put("motif",r.getMotif());
+            vue.put("dateHeure",r.getDateHeure());vue.put("lieu",r.getLieu());vue.put("typeRendezVous",r.getTypeRendezVous());
+            vue.put("statut",r.getStatut());vue.put("version",r.getVersion());return vue;
+        }).toList();
     }
 
     @PostMapping

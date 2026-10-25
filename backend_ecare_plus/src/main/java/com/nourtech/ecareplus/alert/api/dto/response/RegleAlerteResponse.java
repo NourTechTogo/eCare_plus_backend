@@ -20,6 +20,11 @@ public record RegleAlerteResponse(
         NiveauPriorite niveauPriorite,
         boolean actif,
         Instant dateValidation,
-        long version
+        long version,
+        UUID patientId,
+        UUID structureId,
+        String composante,
+        String unite,
+        String contexteMesure
 ) {
 }

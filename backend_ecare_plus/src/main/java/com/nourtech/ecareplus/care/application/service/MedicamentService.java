@@ -12,6 +12,7 @@ import java.util.UUID;
 @Service
 @Transactional
 public class MedicamentService {
+    @org.springframework.beans.factory.annotation.Autowired private PlanningHistoriqueService historique;
 
     private final MedicamentRepository medicamentRepository;
 
@@ -31,7 +32,9 @@ public class MedicamentService {
 
     public Medicament modifier(UUID medicamentId, String nomCommercial, String denomination, String forme, String dosage, String uniteDosage) {
         Medicament medicament = charger(medicamentId);
+        historique.avant(medicament);
         medicament.modifier(nomCommercial, denomination, forme, dosage, uniteDosage);
+        historique.apres(medicament);
         return medicament;
     }
 

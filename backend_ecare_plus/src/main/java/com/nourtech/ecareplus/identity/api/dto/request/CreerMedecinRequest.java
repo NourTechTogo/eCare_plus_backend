@@ -20,7 +20,7 @@ public record CreerMedecinRequest(
         @Past LocalDate dateNaissance,
         @Size(max = 30) String telephone,
         @Email @Size(max = 254) String email,
-        @NotBlank @Size(min = 12, max = 128) String motDePasse,
+        @NotBlank @Size(min = 12, max = 72) @jakarta.validation.constraints.Pattern(regexp="(?s)(?=.*[A-Za-z])(?=.*[0-9]).+") String motDePasse,
         @NotBlank @Size(max = 10) String languePreferee,
         @NotBlank @Size(max = 150) String specialite,
         @NotBlank @Size(max = 150) String domaineSpecialisation,
@@ -28,3 +28,4 @@ public record CreerMedecinRequest(
         @NotNull UUID structureId
 ) {
 }
+

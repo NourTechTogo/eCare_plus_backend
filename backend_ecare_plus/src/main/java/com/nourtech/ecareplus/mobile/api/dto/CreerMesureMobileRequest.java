@@ -14,6 +14,8 @@ public record CreerMesureMobileRequest(
         @NotBlank String unite,
         @NotNull Instant dateMesure,
         String contexteMesure,
-        String commentaire
+        String commentaire,
+        @jakarta.validation.constraints.Size(max=120) String sourceRef
 ) {
+    public CreerMesureMobileRequest(TypeMesure t, BigDecimal a, BigDecimal b, String u, Instant d, String c, String note) {this(t,a,b,u,d,c,note,null);}
 }

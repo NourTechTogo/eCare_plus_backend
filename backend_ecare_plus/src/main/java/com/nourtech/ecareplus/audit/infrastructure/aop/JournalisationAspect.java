@@ -49,13 +49,15 @@ public class JournalisationAspect {
         this.journalisationService = journalisationService;
     }
 
-    @Around("execution(public * com.nourtech.ecareplus..application.service..*(..))"
+    @Around("(execution(public * com.nourtech.ecareplus..application.service..*(..))"
             + " && !within(com.nourtech.ecareplus.audit..*)"
             + " && !within(com.nourtech.ecareplus.identity.application.service.MotDePasseService)"
-            + " && !within(com.nourtech.ecareplus.identity.application.service.VerificationUniciteCompteService)")
+            + " && !within(com.nourtech.ecareplus.identity.application.service.VerificationUniciteCompteService))"
+            + " || @annotation(com.nourtech.ecareplus.audit.infrastructure.aop.JournaliserPortail)")
     public Object journaliser(ProceedingJoinPoint point) throws Throwable {
         ContexteRequete contexte = contexteRequete();
-        String ressourceParDefaut = ressourceDepuisService(point.getTarget().getClass());
+        JournaliserPortail facade = ((MethodSignature) point.getSignature()).getMethod().getAnnotation(JournaliserPortail.class);
+        String ressourceParDefaut = facade == null ? ressourceDepuisService(point.getTarget().getClass()) : facade.value();
         UUID identifiantParDefaut = premierIdentifiant(point.getArgs());
 
         Object resultat;
@@ -124,6 +126,9 @@ public class JournalisationAspect {
     }
 
     private static UUID identifiantDepuisResultat(Object resultat, UUID valeurParDefaut) {
+        if (resultat instanceof Map<?,?> valeurs && valeurs.get("id") instanceof UUID id) {
+            return id;
+        }
         return resultat instanceof AbstractEntity entite && entite.getId() != null
                 ? entite.getId()
                 : valeurParDefaut;

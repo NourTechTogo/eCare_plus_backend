@@ -36,6 +36,23 @@ public class Patient extends Utilisateur {
     @Column(length = 30)
     private String telephoneUrgence;
 
+    @Column(length = 100) private String ville;
+    @Column(length = 100) private String pays;
+    private Double tailleCm;
+    private Double poidsKg;
+    @Column(columnDefinition = "text") private String allergies;
+    @Column(columnDefinition = "text") private String antecedents;
+    @Column(length = 40) private String pathologie;
+
+    public void completerProfil(String ville, String pays, Double tailleCm, Double poidsKg, String allergies, String antecedents, String pathologie) {
+        if (tailleCm != null && (!Double.isFinite(tailleCm) || tailleCm < 20 || tailleCm > 300)) throw new IllegalArgumentException("Taille invalide");
+        if (poidsKg != null && (!Double.isFinite(poidsKg) || poidsKg < 1 || poidsKg > 700)) throw new IllegalArgumentException("Poids invalide");
+        if (pathologie != null && !java.util.Set.of("diabete", "hypertension", "diabete_hypertension").contains(pathologie)) throw new IllegalArgumentException("Pathologie invalide");
+        this.ville = normaliserNullable(ville); this.pays = normaliserNullable(pays);
+        this.tailleCm = tailleCm; this.poidsKg = poidsKg; this.allergies = normaliserNullable(allergies);
+        this.antecedents = normaliserNullable(antecedents); this.pathologie = pathologie;
+    }
+
     @Column(length = 100)
     private String codePinHash;
 

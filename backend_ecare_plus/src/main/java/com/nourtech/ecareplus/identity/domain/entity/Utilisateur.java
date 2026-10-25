@@ -56,6 +56,15 @@ public abstract class Utilisateur extends AbstractEntity {
 
     private Instant derniereConnexion;
 
+    @Column(nullable = false)
+    private long sessionVersion;
+
+    public void modifierEtatCivil(Sexe sexe, LocalDate dateNaissance) {
+        this.sexe = Objects.requireNonNullElse(sexe, Sexe.NON_RENSEIGNE);
+        if (dateNaissance != null && dateNaissance.isAfter(LocalDate.now())) throw new IllegalArgumentException("Date de naissance future");
+        this.dateNaissance = dateNaissance;
+    }
+
     protected Utilisateur(
             String nom,
             String prenoms,
@@ -93,6 +102,7 @@ public abstract class Utilisateur extends AbstractEntity {
 
     public void changerMotDePasse(String nouveauMotDePasseHash) {
         this.motDePasseHash = texteObligatoire(nouveauMotDePasseHash, "nouveauMotDePasseHash");
+        this.sessionVersion++;
     }
 
     public void enregistrerConnexion(Instant dateConnexion) {

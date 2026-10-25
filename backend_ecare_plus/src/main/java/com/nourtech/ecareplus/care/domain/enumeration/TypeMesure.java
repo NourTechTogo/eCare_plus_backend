@@ -4,5 +4,7 @@ public enum TypeMesure {
     TENSION_ARTERIELLE,
     GLYCEMIE,
     POIDS,
-    FREQUENCE_CARDIAQUE
+    FREQUENCE_CARDIAQUE,
+    TEMPERATURE,
+    SPO2
 }

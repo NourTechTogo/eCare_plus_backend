@@ -18,6 +18,9 @@ spring:
           time_zone: UTC
 
 app:
+  traitements-planifies: false
+  documents:
+    repertoire: ./target/test-private-documents
   security:
     jwt:
       secret: cle-jwt-reservee-aux-tests-ecare-plus-2026

@@ -51,6 +51,8 @@ public class JwtService {
                 .issuedAt(maintenant)
                 .expiresAt(expiration)
                 .subject(utilisateur.getId().toString())
+                .id(java.util.UUID.randomUUID().toString())
+                .claim("sessionVersion", utilisateur.getSessionVersion())
                 .claim("role", role(utilisateur));
         if (utilisateur.getEmail() != null) {
             claims.claim("email", utilisateur.getEmail());
@@ -61,9 +63,11 @@ public class JwtService {
     }
 
     public JwtDecoder decoder() {
-        return NimbusJwtDecoder.withSecretKey(secretKey)
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(secretKey)
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
+        decoder.setJwtValidator(org.springframework.security.oauth2.jwt.JwtValidators.createDefaultWithIssuer("ecare-plus"));
+        return decoder;
     }
 
     private static String role(Utilisateur utilisateur) {

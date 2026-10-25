@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: ${ECARE_TEST_POSTGRES_URL}
+    username: ${ECARE_TEST_POSTGRES_USER}
+    password: ${ECARE_TEST_POSTGRES_PASSWORD}
+  flyway:
+    enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate

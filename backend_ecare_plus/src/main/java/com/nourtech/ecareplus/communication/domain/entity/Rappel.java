@@ -69,6 +69,9 @@ public class Rappel extends AbstractEntity {
 
     private Instant derniereExecution;
 
+    /** Read status belongs to the latest occurrence, not the recurring schedule. */
+    private Instant derniereLecture;
+
     public Rappel(
             Patient patient,
             PriseMedicament priseMedicament,
@@ -118,6 +121,7 @@ public class Rappel extends AbstractEntity {
     public void envoyer(Instant maintenant) {
         verifierPlanifie();
         this.derniereExecution = Objects.requireNonNull(maintenant, "maintenant");
+        this.derniereLecture = null;
         Instant prochaine = frequence.prochaineOccurrence(dateHeurePrevue);
         if (prochaine == null) {
             this.statut = StatutRappel.ENVOYE;
@@ -147,10 +151,12 @@ public class Rappel extends AbstractEntity {
     }
 
     public void marquerCommeLu() {
-        if (statut != StatutRappel.ENVOYE) {
+        if (derniereExecution == null || derniereLecture != null
+                || statut == StatutRappel.ANNULE || statut == StatutRappel.ECHEC) {
             throw new IllegalStateException("Seul un rappel envoyé peut être marqué comme lu");
         }
-        this.statut = StatutRappel.LU;
+        this.derniereLecture = Instant.now();
+        if (frequence == RecurrenceRappel.AUCUNE) this.statut = StatutRappel.LU;
     }
 
     private void verifierPlanifie() {

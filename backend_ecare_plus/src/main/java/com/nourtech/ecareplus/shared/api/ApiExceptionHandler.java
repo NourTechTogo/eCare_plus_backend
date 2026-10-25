@@ -20,6 +20,12 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    ProblemDetail statutExplicite(org.springframework.web.server.ResponseStatusException exception,HttpServletRequest request){return probleme(HttpStatus.valueOf(exception.getStatusCode().value()),"Opération non disponible",exception.getReason()==null?"Opération indisponible":exception.getReason(),request);}
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    ProblemDetail fichierExcessif(org.springframework.web.multipart.MaxUploadSizeExceededException exception,HttpServletRequest request){return probleme(HttpStatus.PAYLOAD_TOO_LARGE,"Fichier trop volumineux","Le fichier dépasse la taille autorisée",request);}
+    @ExceptionHandler(org.springframework.dao.OptimisticLockingFailureException.class)
+    ProblemDetail versionObsolete(org.springframework.dao.OptimisticLockingFailureException exception,HttpServletRequest request){return probleme(HttpStatus.CONFLICT,"Version obsolète","La ressource a été modifiée ; rechargez les données",request);}
 
     @ExceptionHandler(AuthentificationException.class)
     ProblemDetail authentification(AuthentificationException exception, HttpServletRequest request) {
@@ -44,8 +50,8 @@ public class ApiExceptionHandler {
         return probleme(HttpStatus.CONFLICT, "Conflit métier", exception.getMessage(), request);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    ProblemDetail argumentInvalide(IllegalArgumentException exception, HttpServletRequest request) {
+    @ExceptionHandler({IllegalArgumentException.class, java.time.DateTimeException.class})
+    ProblemDetail argumentInvalide(RuntimeException exception, HttpServletRequest request) {
         return probleme(HttpStatus.BAD_REQUEST, "Requête invalide", exception.getMessage(), request);
     }
 
@@ -101,6 +107,7 @@ public class ApiExceptionHandler {
         ProblemDetail detail = ProblemDetail.forStatusAndDetail(statut, message);
         detail.setTitle(titre);
         detail.setInstance(URI.create(request.getRequestURI()));
+        detail.setProperty("erreurs", List.of());
         return detail;
     }
 }

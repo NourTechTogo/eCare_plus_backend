@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
+    java.util.Optional<Notification> findByUtilisateurIdAndSourceRef(UUID utilisateur,String sourceRef);
 
     List<Notification> findAllByUtilisateurIdAndStatutEnvoi(UUID utilisateurId, StatutEnvoiNotification statutEnvoi);
 

@@ -16,6 +16,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
+import com.nourtech.ecareplus.care.domain.entity.MesureSante;
+import com.nourtech.ecareplus.care.domain.value.ValeurMesure;
 
 @Getter
 @Entity
@@ -58,6 +61,38 @@ public class RegleAlerte extends AbstractEntity {
     private boolean actif;
 
     private Instant dateValidation;
+    private UUID validateurId;
+    @Column(length=30) private String sourceValidation;
+    public void tracerValidation(UUID auteur,String source){validateurId=auteur;sourceValidation=source;}
+
+    private UUID patientId;
+
+    private UUID structureId;
+
+    @Column(nullable = false, length = 20)
+    private String composante = "PRINCIPALE";
+
+    @Column(length = 20)
+    private String unite;
+
+    @Column(length = 100)
+    private String contexteMesure;
+
+    public void definirContexte(String contexte) {
+        this.contexteMesure = normaliser(contexte);
+        this.dateValidation = null;
+        this.actif = false;
+    }
+
+    public boolean contexteApplicable(String contexte) {
+        return contexteMesure == null || normaliserContexte(contexteMesure).equals(normaliserContexte(contexte));
+    }
+
+    private static String normaliserContexte(String contexte) {
+        if (contexte == null) return "";
+        return java.text.Normalizer.normalize(contexte, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").trim().toLowerCase(java.util.Locale.ROOT).replace(' ', '_');
+    }
 
     public RegleAlerte(
             String nom,
@@ -73,11 +108,35 @@ public class RegleAlerte extends AbstractEntity {
         this.nom = obligatoire(nom, "nom");
         this.description = normaliser(description);
         this.typeMesure = Objects.requireNonNull(typeMesure, "typeMesure");
+        this.unite = ValeurMesure.uniteCanonique(typeMesure);
         appliquerSeuils(operateur, seuilMin, seuilMax);
         this.nombreOccurrences = positif(nombreOccurrences, "nombreOccurrences");
         this.periodeObservation = positif(periodeObservation, "periodeObservation");
         this.niveauPriorite = Objects.requireNonNull(niveauPriorite, "niveauPriorite");
         this.actif = false;
+    }
+
+    public void definirPortee(UUID patientId, UUID structureId, String composante, String unite) {
+        String component = composante == null || composante.isBlank() ? "PRINCIPALE" : composante;
+        if (!Set.of("PRINCIPALE", "DIASTOLIQUE").contains(component))
+            throw new IllegalArgumentException("composante doit être PRINCIPALE ou DIASTOLIQUE");
+        if (component.equals("DIASTOLIQUE") && typeMesure != TypeMesure.TENSION_ARTERIELLE)
+            throw new IllegalArgumentException("DIASTOLIQUE est réservée à la tension artérielle");
+        String unit = unite == null || unite.isBlank() ? ValeurMesure.uniteCanonique(typeMesure) : unite.trim();
+        if (!unit.equals(ValeurMesure.uniteCanonique(typeMesure)))
+            throw new IllegalArgumentException("Les seuils utilisent l'unité canonique " + ValeurMesure.uniteCanonique(typeMesure));
+        this.patientId = patientId;
+        this.structureId = structureId;
+        this.composante = component;
+        this.unite = unit;
+        this.dateValidation = null;
+        this.actif = false;
+    }
+
+    public BigDecimal valeurEvaluee(MesureSante mesure) {
+        if (mesure.getTypeMesure() != typeMesure || unite == null || !unite.equals(mesure.getUnite()))
+            throw new IllegalArgumentException("La mesure et la règle doivent utiliser le même type et la même unité");
+        return "DIASTOLIQUE".equals(composante) ? mesure.getValeurSecondaire() : mesure.getValeurPrincipale();
     }
 
     public void modifierRegle(
@@ -135,6 +194,7 @@ public class RegleAlerte extends AbstractEntity {
             case ">=" -> valeur.compareTo(seuilMin) >= 0;
             case "<" -> valeur.compareTo(seuilMin) < 0;
             case "<=" -> valeur.compareTo(seuilMin) <= 0;
+            case "VARIATION_ABSOLUE" -> valeur.compareTo(seuilMin) >= 0;
             case "HORS_PLAGE" -> valeur.compareTo(seuilMin) < 0 || valeur.compareTo(seuilMax) > 0;
             default -> throw new IllegalStateException("Opérateur non supporté : " + operateur);
         };
@@ -142,7 +202,9 @@ public class RegleAlerte extends AbstractEntity {
 
     private void appliquerSeuils(String operateur, BigDecimal seuilMin, BigDecimal seuilMax) {
         String op = obligatoire(operateur, "operateur");
-        if (OPERATEURS_SIMPLES.contains(op)) {
+        if(op.equals("VARIATION_ABSOLUE")){
+            if(typeMesure!=TypeMesure.POIDS||seuilMin==null||seuilMin.signum()<=0)throw new IllegalArgumentException("Variation positive de poids attendue");this.seuilMin=seuilMin;this.seuilMax=null;
+        } else if (OPERATEURS_SIMPLES.contains(op)) {
             this.seuilMin = Objects.requireNonNull(seuilMin, "seuilMin");
             this.seuilMax = seuilMax;
         } else if (op.equals("HORS_PLAGE")) {
