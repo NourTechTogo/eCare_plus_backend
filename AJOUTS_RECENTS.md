@@ -100,3 +100,7 @@ La configuration des fournisseurs est préparée dans [external-services.env.exa
 - [Preuves de vérification](docs/VALIDATION.md)
 - [Configuration des services](docs/integration-clients/CONFIGURATION.md)
 - [Ajouts web](https://github.com/NourTechTogo/eCare_plus_frontend/blob/ecare_frontend_stable/AJOUTS_RECENTS.md) et [ajouts mobile](https://github.com/NourTechTogo/eCare_plus_mobile/blob/ecare_mobile_stable/AJOUTS_RECENTS.md)
+
+## Publication indépendante — 25 octobre 2026
+
+Branche `ecare_backend_stable` publiée dans le dépôt backend uniquement, sans fusion dans main. Documentation et exemples de configuration inclus dans ce dépôt ; clés, bases, fichiers privés et artefacts de compilation exclus. Voir [validation et limites](docs/VALIDATION.md).
