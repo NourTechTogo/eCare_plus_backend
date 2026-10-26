@@ -1,10 +1,12 @@
 # eCare+ — API commune
 
+Messages vocaux privés disponibles : enregistrement, brouillon, envoi explicite et lecture avec progression, via le backend commun. Voir [les ajouts récents](AJOUTS_RECENTS.md) et [la validation du 26 octobre 2026](docs/VALIDATION.md).
+
 Branche `ecare_backend_stable`. Projet indépendant des dépôts mobile et web. Les sources Spring Boot et le Maven Wrapper se trouvent dans `backend_ecare_plus/`.
 
 ## Fonctionnalités livrées
 
-Authentification JWT et sessions révocables, profils et consentements, affectation des patients, six types de mesures, seuils et alertes, documents privés, prescriptions atomiques et observance, notifications et boîte d'envoi, notes liées aux ressources, référencement temporaire, messagerie avec pièces jointes privées et réessais idempotents, cycle de vie des appels LiveKit et révocation des accès. Migrations Flyway V1–V30.
+Authentification JWT et sessions révocables, profils et consentements, affectation des patients, six types de mesures, seuils et alertes, documents privés, prescriptions atomiques et observance, notifications et boîte d'envoi, notes liées aux ressources, référencement temporaire, messagerie avec pièces jointes privées et réessais idempotents, cycle de vie des appels LiveKit et révocation des accès. Migrations Flyway V1–V31.
 
 Consulter [les ajouts détaillés](AJOUTS_RECENTS.md), [le contrat API](docs/backend/API.md), [les appels](docs/backend/APPELS.md) et [la validation et les limites](docs/VALIDATION.md).
 

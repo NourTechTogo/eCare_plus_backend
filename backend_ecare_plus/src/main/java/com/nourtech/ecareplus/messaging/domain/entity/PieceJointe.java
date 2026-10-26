@@ -16,6 +16,11 @@ public class PieceJointe extends AbstractEntity {
     @Column(nullable=false,length=128) private String sourceRef;
     @Column(nullable=false,length=64) private String empreinte;
     @Column(nullable=false) private boolean supprimee;
+    private Long dureeMs;
+    public void definirDureeAudio(long duree) {
+        if(!"audio/wav".equals(typeMime) || duree<250 || duree>120000)throw new IllegalArgumentException("Durée vocale invalide");
+        dureeMs=duree;
+    }
     public PieceJointe(Conversation c,UUID auteur,String nom,String mime,long taille,String cle,String ref,String hash){conversation=c;auteurId=auteur;nomOriginal=nom;typeMime=mime;tailleOctets=taille;cleStockage=cle;sourceRef=ref;empreinte=hash;}
     public void rattacher(MessageConversation m){if(message!=null)throw new IllegalStateException("Pièce déjà rattachée");message=m;}
     public void supprimer(){supprimee=true;}

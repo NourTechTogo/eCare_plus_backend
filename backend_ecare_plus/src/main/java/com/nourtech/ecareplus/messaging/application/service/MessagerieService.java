@@ -80,7 +80,7 @@ public class MessagerieService {
             if(!precedents.isEmpty()){
                 var precedent=precedents.getFirst();
                 var ids=piecesJointes==null?List.<UUID>of():piecesJointes;
-                if(!precedent.getContenu().equals(contenu==null?null:contenu.trim()) || !new HashSet<>(precedent.getPiecesJointes().stream().map(PieceJointe::getId).toList()).equals(new HashSet<>(ids)) || new HashSet<>(ids).size()!=ids.size())throw new com.nourtech.ecareplus.shared.application.exception.ConflitMetierException("Clé de message réutilisée avec une autre demande");
+                if(!precedent.getContenu().equals(contenu==null?null:contenu.trim()) || !new HashSet<>(precedent.getPiecesJointes().stream().map(PieceJointe::getId).toList()).equals(new HashSet<>(ids)) || new HashSet<>(ids).size()!=ids.size())throw new com.nourtech.ecareplus.shared.application.exception.ConflitMetierException("ClÃ© de message rÃ©utilisÃ©e avec une autre demande");
                 return precedent;
             }
         }

@@ -1,5 +1,13 @@
 # Ajouts et corrections récents — Backend eCare+
 
+## Livraison du 26 octobre 2026 : messages vocaux privés
+
+- Ajout du format WAV à la messagerie privée, validation des octets PCM et calcul serveur de `dureeMs` ; migration Flyway V31.
+- Conservation des contrôles d'accès aux pièces, de la confidentialité des brouillons et des réessais idempotents. Les formats des documents médicaux ne changent pas.
+- Tests d'intégration pour les échanges vocaux, les refus de formats/durées invalides, l'accès privé et les réessais sans doublon.
+- Correction d'un ancien encodage de texte français dans `MessagerieService` qui provoquait des avertissements de compilation.
+- Recette complète : 171 tests backend réussis, PostgreSQL inclus. Contrat : [API](docs/backend/API.md) ; preuves et limites : [validation](docs/VALIDATION.md).
+
 ## Dernière livraison : restauration et appels locaux
 
 - Agenda professionnel réel : route GET filtrée par affectation et consentement.
