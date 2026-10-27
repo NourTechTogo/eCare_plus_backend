@@ -33,8 +33,8 @@ public class DossierSuivi extends AbstractEntity {
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "structure_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "structure_id")
     private StructureSante structure;
 
     @Column(nullable = false)
@@ -62,6 +62,15 @@ public class DossierSuivi extends AbstractEntity {
         this.dateOuverture = LocalDate.now();
         this.dateDerniereMiseAJour = Instant.now();
         this.statut = StatutDossier.ACTIF;
+    }
+
+    public static DossierSuivi personnel(Patient patient) {
+        DossierSuivi dossier = new DossierSuivi();
+        dossier.patient = Objects.requireNonNull(patient, "patient");
+        dossier.dateOuverture = LocalDate.now(java.time.ZoneOffset.UTC);
+        dossier.dateDerniereMiseAJour = Instant.now();
+        dossier.statut = StatutDossier.ACTIF;
+        return dossier;
     }
 
     public void mettreAJour(String resumeMedical, String frequenceSuivi, LocalDate prochainControle) {

@@ -45,11 +45,15 @@ class BackendParcoursCompletTests extends BackendFixture {
         sortie.write(("--"+limite+"\r\nContent-Disposition: form-data; name=\"fichier\"; filename=\"document.pdf\"\r\nContent-Type: application/pdf\r\n\r\n").getBytes(StandardCharsets.UTF_8));sortie.write(DocumentMedicalIntegrationTests.PDF);sortie.write(("\r\n--"+limite+"--\r\n").getBytes(StandardCharsets.UTF_8));
         var demande=requete(chemin,token).setHeader("Content-Type","multipart/form-data; boundary="+limite).POST(HttpRequest.BodyPublishers.ofByteArray(sortie.toByteArray())).build();var resultat=client.send(demande,HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));preuves.add(Map.of("methode","POST multipart","route",chemin,"statut",resultat.statusCode()));assertThat(resultat.statusCode()).as(resultat.body()).isEqualTo(201);return json.readTree(resultat.body());
     }
-    @Test void nouveauCompteSansDossierPuisTousLesModulesParVraiHttp()throws Exception{
+    @Test void nouveauComptePersonnelPuisRattachementEtTousLesModulesParVraiHttp()throws Exception{
         var client=HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();String email="nouveau-"+suffix+"@example.test";LocalDate jour=LocalDate.now(ZoneOffset.UTC);
         var inscription=http(client,"POST","/auth/inscription",null,Map.of("nom","Nouveau","prenoms","Patient","email",email,"telephone","NEW-"+suffix,"motDePasse",password,"consentementAccepte",true,"versionDocument","test-2026","cguLues",true,"confidentialiteLue",true),201);String patient=inscription.path("id").asText();
         String token=http(client,"POST","/auth/connexion",null,Map.of("identifiant",email,"motDePasse",password),200).path("jeton").asText();
-        assertThat(http(client,"GET","/mobile/me",token,null,200).path("dossierId").isNull()).isTrue();
+        var profilPersonnel=http(client,"GET","/mobile/me",token,null,200);
+        assertThat(profilPersonnel.path("dossierId").asText()).isNotBlank();
+        assertThat(profilPersonnel.path("structureId").isNull()).isTrue();
+        assertThat(profilPersonnel.path("professionnelId").isNull()).isTrue();
+        assertThat(http(client,"GET","/mobile/me/dossier",token,null,200).path("id").asText()).isEqualTo(profilPersonnel.path("dossierId").asText());
         http(client,"PATCH","/mobile/me",token,Map.of("dateNaissance","1990-01-01","personneAContacter","Proche fictif","telephoneUrgence","URG-NEW-"+suffix),200);
         String qr=http(client,"POST","/mobile/me/referencements",token,null,201).path("jeton").asText();
         var reference=new LinkedHashMap<String,Object>();reference.put("jeton",qr);reference.put("professionnelId",doctor.toString());reference.put("versionDossier",null);

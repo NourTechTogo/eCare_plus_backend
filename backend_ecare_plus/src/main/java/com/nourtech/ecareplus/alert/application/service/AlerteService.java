@@ -109,7 +109,7 @@ public class AlerteService {
         List<RegleAlerte> candidates = regleAlerteRepository.findAllByTypeMesureAndActifTrue(mesure.getTypeMesure()).stream()
                 .filter(r -> r.getUnite() != null && r.getUnite().equals(mesure.getUnite()))
                 .filter(r -> r.getPatientId() == null || r.getPatientId().equals(mesure.getPatient().getId()))
-                .filter(r -> r.getStructureId() == null || r.getStructureId().equals(mesure.getDossier().getStructure().getId()))
+                .filter(r -> r.getStructureId() == null || (mesure.getDossier().getStructure()!=null&&r.getStructureId().equals(mesure.getDossier().getStructure().getId())))
                 .filter(r -> r.contexteApplicable(mesure.getContexteMesure()))
                 .toList();
         return candidates.stream()
@@ -135,6 +135,7 @@ public class AlerteService {
                 .findAllByPatientIdAndTypeMesureAndDateMesureBetween(
                         mesure.getPatient().getId(), mesure.getTypeMesure(), debut, mesure.getDateMesure()
                 ).stream()
+                .filter(candidate -> candidate.getDossier().getId().equals(mesure.getDossier().getId()))
                 .filter(candidate -> candidate.getUnite().equals(regle.getUnite()))
                 .filter(candidate -> regle.contexteApplicable(candidate.getContexteMesure()))
                 .filter(candidate -> regle.depasseSeuil(regle.valeurEvaluee(candidate)))
@@ -157,7 +158,7 @@ public class AlerteService {
         );
         alerteRepository.saveAndFlush(alerte);
         if (em != null) {
-            List<AffectationPatient> affectations = em.createQuery(
+            List<AffectationPatient> affectations = mesure.getDossier().getStructure()==null ? List.of() : em.createQuery(
                     "select a from AffectationPatient a join fetch a.professionnel where a.patient.id=:patient and a.structure.id=:structure and a.statut=:statut", AffectationPatient.class)
                     .setParameter("patient", mesure.getPatient().getId())
                     .setParameter("structure", mesure.getDossier().getStructure().getId())

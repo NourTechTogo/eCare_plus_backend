@@ -1,5 +1,14 @@
 # Ajouts et corrections récents — Backend eCare+
 
+## Phase 1 — patient autonome, 27 octobre 2026
+
+- Dossier personnel sans structure dès l'inscription ; migration V32 conservant les dossiers et affectations existants.
+- Accès aux mesures, historique, alertes et traitements personnels sans médecin obligatoire ; accès professionnels toujours limités par leurs droits.
+- Déclarations de traitement personnelles avec planning/observance et réessais sans doublon ; protection des médicaments privés contre la réutilisation professionnelle.
+- Alertes cloisonnées par dossier, sans notification professionnelle pour les mesures personnelles ; réessais de mesure stables après rattachement.
+- [Bilan, API, fichiers et limites](docs/refonte/PHASE_1_AUTONOMIE_PATIENT.md) ; [résultats de validation](docs/VALIDATION.md).
+
+
 ## Livraison du 26 octobre 2026 : messages vocaux privés
 
 - Ajout du format WAV à la messagerie privée, validation des octets PCM et calcul serveur de `dureeMs` ; migration Flyway V31.

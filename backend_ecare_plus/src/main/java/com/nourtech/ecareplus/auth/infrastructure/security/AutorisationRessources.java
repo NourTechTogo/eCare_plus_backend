@@ -193,7 +193,12 @@ public class AutorisationRessources {
                     require(cible != null && patientAccessible(cible, actor, true));
                 }
             }
-            case Medicament ignored -> { /* shared medication catalog, physician writes only */ }
+            case Medicament medicament -> {
+                // A personal declaration must not become an editable shared prescription ingredient.
+                long personnelles = em.createQuery("select count(p) from PriseMedicament p where p.medicament.id=:id and p.traitement.dossier.structure is null",Long.class)
+                        .setParameter("id",medicament.getId()).getSingleResult();
+                require(personnelles == 0);
+            }
             default -> throw denied();
         }
     }
@@ -212,7 +217,7 @@ public class AutorisationRessources {
                 .anyMatch(c -> c.estValideA(Instant.now()));
     }
 
-    private void structure(StructureSante structure, Utilisateur actor) { require(structure.getId().equals(structureId(actor))); }
+    private void structure(StructureSante structure, Utilisateur actor) { require(structure != null && structure.getId().equals(structureId(actor))); }
     private UUID structureId(Utilisateur actor) {
         return switch (actor) {
             case ProfessionnelSante p -> p.getStructure().getId();

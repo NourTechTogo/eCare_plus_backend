@@ -129,3 +129,11 @@ Les vocaux utilisent les pièces jointes de conversation existantes, avec les m�
 4. `GET /api/v1/mobile/conversations/{id}/pieces-jointes/{pieceId}/contenu` : téléchargement authentifié privé avec `Cache-Control: no-store`. Avant l'envoi du message, le brouillon reste réservé à son auteur. Après envoi, les participants autorisés peuvent le lire.
 
 La migration V31 ajoute `duree_ms` nullable et sa contrainte de durée/type. Les documents médicaux restent limités aux PDF/JPEG/PNG : l'autorisation WAV concerne uniquement la messagerie. Les lecteurs mobile et web prennent en charge lecture, pause, progression et déplacement ; un seul vocal joue à la fois. Les changements de session et la navigation annulent les opérations audio obsolètes. L'enregistrement vocal est désactivé pendant un appel actif pour libérer son microphone.
+
+## Phase 1 : suivi personnel sans affectation (V32)
+
+Le patient authentifié n'a plus besoin d'une affectation pour ses routes personnelles. Le consentement de suivi existant reste contrôlé. L'inscription crée un dossier personnel ; `GET /mobile/me` expose `dossierId` et peut exposer `structureId:null`, `professionnelId:null`. `GET /mobile/me/dossier` expose `structure:null` pour ce dossier. Les droits professionnels et les dossiers institutionnels sont conservés ; le rattachement ultérieur n'ouvre pas automatiquement la lecture d'un dossier personnel.
+
+`POST /api/v1/mobile/me/traitements` ajoute une déclaration personnelle atomique et idempotente. Le corps porte `sourceRef` UUID, `libelle`, `dateDebut`, `dateFin` facultative, `medicament:{nomCommercial,dosage,uniteDosage,forme}` et `prise:{quantite,unite,heurePrevue,fuseau,joursSemaine}` (1=lundi, 7=dimanche). Le propriétaire vient du JWT. Réponse 201 : `traitementId,medicamentId,priseId,versionPrise,fuseau,joursSemaine`. Même référence et contenu : même reçu ; autre contenu : 409.
+
+Le planning ajoute `declarationPersonnelle:boolean` à chaque traitement. Les routes d'observance et de réponse aux prises existantes sont réutilisées. Les réessais de mesures conservent le dossier initial malgré une affectation créée entre-temps. Voir [le contrat complet et les limites](../refonte/PHASE_1_AUTONOMIE_PATIENT.md).

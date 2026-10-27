@@ -22,7 +22,7 @@ public class EspacePatientController {
     public EspacePatientController(EspacePatientService service) { this.service = service; }
 
     @GetMapping
-    public java.util.Map<String,Object> profil(JwtAuthenticationToken token) { return portail.vue(portail.soi(patient(token).utilisateurId(),false),true); }
+    public java.util.Map<String,Object> profil(JwtAuthenticationToken token) { service.assurerDossier(patient(token).utilisateurId()); return portail.vue(portail.soi(patient(token).utilisateurId(),false),true); }
 
     @PatchMapping
     public java.util.Map<String,Object> modifier(JwtAuthenticationToken token,@RequestBody java.util.Map<String,Object> r){return portail.modifierSoi(patient(token).utilisateurId(),r);}

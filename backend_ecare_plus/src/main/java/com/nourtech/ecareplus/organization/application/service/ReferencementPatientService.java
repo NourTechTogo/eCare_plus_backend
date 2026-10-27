@@ -55,6 +55,6 @@ public class ReferencementPatientService {
         var liste=em.createQuery("select j from JetonReferencement j where j.empreinte=:hash",JetonReferencement.class).setParameter("hash",Empreintes.sha256(secret)).getResultList();
         if(liste.isEmpty()||!liste.getFirst().valide())throw new ConflitMetierException("Jeton expiré, révoqué ou déjà utilisé");return liste.getFirst();
     }
-    private DossierSuivi dossierCompatible(Patient patient,StructureSante structure){var actifs=dossiers.findAllByPatientId(patient.getId()).stream().filter(d->d.getStatut()==StatutDossier.ACTIF).toList();
+    private DossierSuivi dossierCompatible(Patient patient,StructureSante structure){var actifs=dossiers.findAllByPatientId(patient.getId()).stream().filter(d->d.getStatut()==StatutDossier.ACTIF&&d.getStructure()!=null).toList();
         if(actifs.size()>1||actifs.stream().anyMatch(d->!d.getStructure().getId().equals(structure.getId())))throw new ConflitMetierException("Dossier préexistant : rapprochement humain requis");return actifs.isEmpty()?null:actifs.getFirst();}
 }

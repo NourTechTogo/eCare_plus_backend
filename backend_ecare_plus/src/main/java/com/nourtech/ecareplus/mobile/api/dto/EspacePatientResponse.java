@@ -15,7 +15,7 @@ public final class EspacePatientResponse {
     public record Dossier(UUID id, String statut, String structure, LocalDate dateOuverture,
                           String resumeMedical, String frequenceSuivi, LocalDate prochainControle) {
         public static Dossier depuis(DossierSuivi source) {
-            return new Dossier(source.getId(), source.getStatut().name(), source.getStructure().getNom(),
+            return new Dossier(source.getId(), source.getStatut().name(), source.getStructure()==null?null:source.getStructure().getNom(),
                     source.getDateOuverture(), source.getResumeMedical(), source.getFrequenceSuivi(),
                     source.getProchainControle());
         }

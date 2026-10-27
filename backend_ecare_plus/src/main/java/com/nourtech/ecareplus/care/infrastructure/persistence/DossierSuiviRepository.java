@@ -16,6 +16,8 @@ public interface DossierSuiviRepository extends JpaRepository<DossierSuivi, UUID
             StatutDossier statut
     );
 
+    Optional<DossierSuivi> findFirstByPatientIdAndStructureIdIsNullAndStatut(UUID patientId, StatutDossier statut);
+
     List<DossierSuivi> findAllByPatientId(UUID patientId);
 
     Optional<DossierSuivi> findFirstByPatientIdAndStatutOrderByDateOuvertureDesc(

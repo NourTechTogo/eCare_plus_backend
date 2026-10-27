@@ -9,6 +9,13 @@ import java.util.*;
 @RestController @RequestMapping("/api/v1") @RequiredArgsConstructor @AccesVerifieParService
 public class TraitementPatientController {
     private final PlanningTraitementService planning;private final ObservanceService observance;private final AccesPatientService acces;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.nourtech.ecareplus.mobile.application.service.DeclarationTraitementService declarations;
+    @PostMapping("/mobile/me/traitements")
+    @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.CREATED)
+    public PrescriptionAtomiqueService.PrescriptionVue declarer(@jakarta.validation.Valid @RequestBody com.nourtech.ecareplus.mobile.api.dto.DeclarationTraitementRequest commande) {
+        return declarations.declarer(commande);
+    }
     @GetMapping({"/mobile/me/planning-traitements","/portail/patients/{patientId}/planning-traitements"})
     public PlanningTraitementService.PlanningVue planning(@PathVariable(required=false) UUID patientId,@RequestParam LocalDate du,@RequestParam LocalDate au){var acteur=acces.acteurId();return planning.consulter(acteur,patientId==null?acteur:patientId,du,au);}
     @PutMapping("/portail/prises/{priseId}/planning")

@@ -13,7 +13,9 @@ class ReferencementQrIntegrationTests extends BackendFixture {
             .andExpect(status().isOk()).andExpect(jsonPath("$.patientId").value(patient.toString())).andExpect(jsonPath("$.allergies").doesNotExist());
         mvc.perform(post("/api/v1/portail/referencements").header("Authorization",bearer(adminToken)).contentType("application/json").content(corps)).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(patient.toString()));
         mvc.perform(post("/api/v1/portail/referencements").header("Authorization",bearer(adminToken)).contentType("application/json").content(corps)).andExpect(status().isConflict());
-        assertThat(jdbc.queryForObject("select count(*) from dossier_suivi where patient_id=?",Integer.class,patient)).isEqualTo(1);
+        // Admission must preserve exactly one institutional dossier AND the independent personal dossier.
+        assertThat(jdbc.queryForObject("select count(*) from dossier_suivi where patient_id=? and structure_id=?",Integer.class,patient,structure)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from dossier_suivi where patient_id=? and structure_id is null",Integer.class,patient)).isEqualTo(1);
     }
     @Test void nouvelleGenerationRevoqueAncienEtRefuseActeurPatient() throws Exception {
         patientId();var token=login();

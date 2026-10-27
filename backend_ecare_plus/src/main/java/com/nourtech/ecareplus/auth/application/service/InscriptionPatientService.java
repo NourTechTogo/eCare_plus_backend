@@ -34,6 +34,9 @@ public class InscriptionPatientService {
         this.patientRepository = patientRepository;
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.nourtech.ecareplus.care.application.service.DossierPersonnelService dossiersPersonnels;
+
     public Patient inscrire(InscriptionPatientRequest request) {
         com.nourtech.ecareplus.portail.application.PortailService.validerPassword(request.motDePasse());
         if (!request.consentementAccepte() || !request.cguLues() || !request.confidentialiteLue()
@@ -52,6 +55,8 @@ public class InscriptionPatientService {
                 "fr"
         ));
         patient.activerCompte();
+        patient.activerSuivi();
+        dossiersPersonnels.obtenir(patient.getId());
         if(request.consentementAccepte()) {
             if(!request.cguLues()||!request.confidentialiteLue()||request.versionDocument()==null||request.versionDocument().isBlank())throw new IllegalArgumentException("Lecture des CGU et confidentialité requise");
             var attrs=(org.springframework.web.context.request.ServletRequestAttributes)org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();

@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class PlanningTraitementIntegrationTests extends BackendFixture {
     UUID programme(UUID patient,LocalDate debut,LocalDate fin,LocalTime heure){return tx.execute(status->{
-        var dossier=em.createQuery("select d from DossierSuivi d where d.patient.id=:id",DossierSuivi.class).setParameter("id",patient).getSingleResult();
+        var dossier=em.createQuery("select d from DossierSuivi d where d.patient.id=:id and d.structure.id=:structure",DossierSuivi.class).setParameter("id",patient).setParameter("structure",structure).getSingleResult();
         var traitement=new Traitement(dossier,"Traitement de suivi",null,debut,fin,"Médecin",null);em.persist(traitement);
         var medicament=new Medicament("Exemple","Exemple","comprimé","10","mg");em.persist(medicament);
         var prise=new PriseMedicament(traitement,medicament,BigDecimal.ONE,"comprimé","QUOTIDIEN",heure,null,"orale",null);em.persist(prise);return prise.getId();

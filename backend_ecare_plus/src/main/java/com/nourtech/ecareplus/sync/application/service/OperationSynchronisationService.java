@@ -19,7 +19,7 @@ import java.time.Instant;
 import java.util.*;
 @Service @RequiredArgsConstructor
 public class OperationSynchronisationService {
-    private final EntityManager em;private final ObjectMapper json;private final Validator validation;private final AccesPatientService acces;private final PortailService portail;private final MesureSanteService mesures;private final ObservanceService observance;
+    private final EntityManager em;private final ObjectMapper json;private final Validator validation;private final AccesPatientService acces;private final PortailService portail;private final com.nourtech.ecareplus.care.infrastructure.persistence.MesureSanteRepository mesuresRepository;private final MesureSanteService mesures;private final ObservanceService observance;
     public record ElementCommande(String identifiantLocal,String typeOperation,int versionSchema,Instant dateCreationLocale,Map<String,Object> contenu){}
     public record ElementResultat(String identifiantLocal,String typeOperation,String statut,UUID ressourceId,Long versionServeur,String codeErreur,String message){}
     @Transactional(propagation=Propagation.REQUIRES_NEW)
@@ -40,7 +40,7 @@ public class OperationSynchronisationService {
                 var corps=new LinkedHashMap<>(element.contenu());String origine=String.valueOf(corps.remove("origine"));
                 if(!Set.of("null","PATIENT","APPAREIL_CONNECTE").contains(origine))throw new IllegalArgumentException("Provenance inconnue");
                 var requete=json.convertValue(corps,CreerMesureMobileRequest.class);if(!validation.validate(requete).isEmpty())throw new IllegalArgumentException("Mesure incomplète ou invalide");
-                var mesure=mesures.enregistrer(new EnregistrerMesureCommand(portail.dossier(patient).getId(),acteur,requete.typeMesure(),requete.valeurPrincipale(),requete.valeurSecondaire(),requete.unite(),requete.dateMesure(),requete.contexteMesure(),requete.commentaire(),"APPAREIL_CONNECTE".equals(origine)?SourceMesure.APPAREIL_CONNECTE:SourceMesure.PATIENT,"SYNCHRONISEE",reference));
+                var mesure=mesures.enregistrer(new EnregistrerMesureCommand(mesuresRepository.findByPatientIdAndSourceRef(acteur,reference).map(m->m.getDossier().getId()).orElseGet(()->portail.dossier(patient).getId()),acteur,requete.typeMesure(),requete.valeurPrincipale(),requete.valeurSecondaire(),requete.unite(),requete.dateMesure(),requete.contexteMesure(),requete.commentaire(),"APPAREIL_CONNECTE".equals(origine)?SourceMesure.APPAREIL_CONNECTE:SourceMesure.PATIENT,"SYNCHRONISEE",reference));
                 em.flush();ressource=mesure.getId();version=mesure.getVersion();
             }
             case "REPONDRE_PRISE" -> {

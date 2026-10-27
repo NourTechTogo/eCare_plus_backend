@@ -40,8 +40,12 @@ public class EspacePatientService {
         this.mesureSanteService = mesureSanteService;
     }
 
+    @Transactional
+    public void assurerDossier(UUID id) { portail.dossier(portail.soi(id,false)); }
+
     public ProfilAuthentifieResponse profil(UUID id) { return ProfilAuthentifieResponse.depuis(patient(id)); }
 
+    @Transactional
     public EspacePatientResponse.Dossier dossier(UUID id) {
         portail.soi(id,true);
         return EspacePatientResponse.Dossier.depuis(dossierActif(id));
@@ -57,7 +61,10 @@ public class EspacePatientService {
     public EspacePatientResponse.Mesure enregistrer(UUID id, CreerMesureMobileRequest request) {
         portail.soi(id,true);
         Patient patient = patient(id);
-        DossierSuivi dossier = dossierActif(id);
+        // A later institutional admission must not change the identity of an uncertain retry.
+        DossierSuivi dossier = request.sourceRef() == null ? dossierActif(id)
+                : mesures.findByPatientIdAndSourceRef(id, request.sourceRef()).map(MesureSante::getDossier)
+                    .orElseGet(() -> dossierActif(id));
         MesureSante mesure = mesureSanteService.enregistrer(new EnregistrerMesureCommand(
                 dossier.getId(), patient.getId(), request.typeMesure(), request.valeurPrincipale(),
                 request.valeurSecondaire(), request.unite(), request.dateMesure(), request.contexteMesure(),

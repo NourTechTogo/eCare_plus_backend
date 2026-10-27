@@ -17,5 +17,5 @@ public class AccesPatientService {
     }
     public UUID acteurId(){return portail.acteur().getId();}
     public UUID structureClinique(){var u=portail.acteur();return u instanceof com.nourtech.ecareplus.identity.domain.entity.ProfessionnelSante p?p.getStructure().getId():null;}
-    public void verifierDossier(UUID acteur,com.nourtech.ecareplus.care.domain.entity.DossierSuivi dossier){verifier(acteur,dossier.getPatient().getId());UUID structure=structureClinique();if(structure!=null&&!structure.equals(dossier.getStructure().getId()))throw new AccessDeniedException("Dossier d'une autre structure");}
+    public void verifierDossier(UUID acteur,com.nourtech.ecareplus.care.domain.entity.DossierSuivi dossier){verifier(acteur,dossier.getPatient().getId());UUID structure=structureClinique();if(structure!=null&&(dossier.getStructure()==null||!structure.equals(dossier.getStructure().getId())))throw new AccessDeniedException("Dossier d'une autre structure");}
 }

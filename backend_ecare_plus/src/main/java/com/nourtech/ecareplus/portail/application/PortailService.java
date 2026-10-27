@@ -40,6 +40,7 @@ public class PortailService  {
     private final MotDePasseService passwords;
     private final ProfilValidation validation;
     private final com.nourtech.ecareplus.alert.infrastructure.persistence.RegleAlerteRepository regles;
+    private final com.nourtech.ecareplus.care.application.service.DossierPersonnelService dossiersPersonnels;
     public Utilisateur acteur() {
         return auth.acteur();
     }
@@ -58,7 +59,7 @@ public class PortailService  {
         Patient p=patient(id);
         if(clinique) {
             require(consenti(p));
-            require(liens(p).stream().anyMatch(a -> actif(a.getProfessionnel())));
+            // Personal follow-up does not depend on a professional assignment.
         }
         return p;
     }
@@ -107,14 +108,18 @@ public class PortailService  {
         var u=acteur();
         UUID structureId;
         if (u instanceof Patient) {
-            structureId = liens(p).stream().filter(a -> actif(a.getProfessionnel())).findFirst()
-                    .orElseThrow(() -> new AccessDeniedException("Aucune affectation active"))
-                    .getStructure().getId();
+            var lien = liens(p).stream().filter(a -> actif(a.getProfessionnel())).findFirst();
+            // Preserve the assigned-patient path; a personal space is the fallback.
+            if (lien.isEmpty()) return dossiersPersonnels.obtenir(p.getId());
+            structureId = lien.get().getStructure().getId();
         } else {
             structureId = structure(u).getId();
         }
         return dossiers.findFirstByPatientIdAndStructureIdAndStatut(p.getId(),structureId,StatutDossier.ACTIF)
-                .orElseThrow(()->new RessourceIntrouvableException("Dossier actif",p.getId()));
+                .orElseGet(() -> {
+                    if (u instanceof Patient) return dossiersPersonnels.obtenir(p.getId());
+                    throw new RessourceIntrouvableException("Dossier actif",p.getId());
+                });
     }
     public Map<String,Object> vue(Patient p,boolean clinique) {
         Map<String,Object> v=new LinkedHashMap<>();
@@ -139,9 +144,9 @@ public class PortailService  {
         v.put("antecedents",clinique?p.getAntecedents():null);
         v.put("pathologie",clinique?p.getPathologie():null);
         var actor=acteur();
-        var d=(actor instanceof Patient?dossiers.findFirstByPatientIdAndStatutOrderByDateOuvertureDesc(p.getId(),StatutDossier.ACTIF):dossiers.findFirstByPatientIdAndStructureIdAndStatut(p.getId(),structure(actor).getId(),StatutDossier.ACTIF)).orElse(null);
+        var d=actor instanceof Patient?dossier(p):dossiers.findFirstByPatientIdAndStructureIdAndStatut(p.getId(),structure(actor).getId(),StatutDossier.ACTIF).orElse(null);
         v.put("dossierId",d==null?null:d.getId());
-        v.put("structureId",d==null?null:d.getStructure().getId());
+        v.put("structureId",d==null||d.getStructure()==null?null:d.getStructure().getId());
         var a=liens(p).stream().filter(l->actor instanceof Patient||l.getStructure().getId().equals(structure(actor).getId())).findFirst().orElse(null);
         v.put("professionnelId",a==null?null:a.getProfessionnel().getId());
         v.put("professionnelNom",a==null?null:nom(a.getProfessionnel()));
@@ -170,6 +175,7 @@ public class PortailService  {
         p.activerSuivi();
         patients.saveAndFlush(p);
         var d=dossiers.save(new DossierSuivi(p,s,"Selon prescription"));
+        dossiersPersonnels.obtenir(p.getId());
         affectations.save(new AffectationPatient(p,pro,s,pro instanceof Medecin?RoleProfessionnel.MEDECIN_REFERENT:RoleProfessionnel.INFIRMIER_REFERENT,LocalDate.now(ZoneOffset.UTC),true));
         synchroniserPathologie(p,d);
         if(Boolean.TRUE.equals(r.get("consentementAccepte")))enregistrerConsentement(p,obligatoire(r,"versionDocument"),ip,"Consentement recueilli lors de l'admission par "+u.getId());
@@ -321,14 +327,14 @@ public class PortailService  {
     public Map<String,Object> alerte(UUID id) {
         var a=alertes.findById(id).orElseThrow(()->new RessourceIntrouvableException("Alerte",id));
         autoriser(a.getPatient().getId(),true);
-        require(a.getMesure()==null||a.getMesure().getDossier().getStructure().getId().equals(structure(acteur()).getId()));
+        require(a.getMesure()==null||(a.getMesure().getDossier().getStructure()!=null&&a.getMesure().getDossier().getStructure().getId().equals(structure(acteur()).getId())));
         return alerteVue(a);
     }
     @JournaliserPortail("ALERTE")
     @Transactional public Map<String,Object> cloturer(UUID id,String motif) {
         var a=alertes.findById(id).orElseThrow(()->new RessourceIntrouvableException("Alerte",id));
         autoriser(a.getPatient().getId(),true);
-        require(a.getMesure()==null||a.getMesure().getDossier().getStructure().getId().equals(structure(acteur()).getId()));
+        require(a.getMesure()==null||(a.getMesure().getDossier().getStructure()!=null&&a.getMesure().getDossier().getStructure().getId().equals(structure(acteur()).getId())));
         a.cloturer(motif,Instant.now(),(ProfessionnelSante)acteur());
         return alerteVue(a);
     }

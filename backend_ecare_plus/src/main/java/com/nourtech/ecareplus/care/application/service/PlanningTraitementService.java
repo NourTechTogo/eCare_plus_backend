@@ -21,7 +21,7 @@ public class PlanningTraitementService {
     private final com.nourtech.ecareplus.communication.application.service.ChangementTraitementService changements;
     private final PlanningHistoriqueService historique;
     public record OccurrenceVue(UUID id,UUID traitementId,UUID priseId,Instant prevueLe,Instant reporteeAu,BigDecimal quantite,String unite,String medicament,String dosage,String uniteDosage,String forme,String voieAdministration,String statut,boolean annulee,long version,String fuseau,Instant dateActionClient,Instant dateConfirmation){}
-    public record TraitementPlanningVue(UUID id,String libelle,LocalDate dateDebut,LocalDate dateFin,String statut,String consignes,List<PrisePlanningVue> prises){}
+    public record TraitementPlanningVue(UUID id,String libelle,LocalDate dateDebut,LocalDate dateFin,String statut,String consignes,boolean declarationPersonnelle,List<PrisePlanningVue> prises){}
     public record PrisePlanningVue(UUID id,String frequence,LocalTime heurePrevue,String fuseau,Set<Integer> joursSemaine,boolean configurationRequise,long version){}
     public record PlanningVue(String version,LocalDate du,LocalDate au,List<TraitementPlanningVue> traitements,List<OccurrenceVue> occurrences){}
     public record PlanningCommande(long version,String fuseau,Set<Integer> joursSemaine){}
@@ -37,7 +37,7 @@ public class PlanningTraitementService {
         }
         confirmations.flush();var occurrences=confirmations.periodeStructure(patientId,structure,debut(du),fin(au)).stream().filter(c->{var jour=c.getDateInitiale().atZone(ZoneId.of(Objects.requireNonNullElse(c.getFuseauPrevu(),c.getPriseMedicament().getFuseau()))).toLocalDate();return !jour.isBefore(du)&&!jour.isAfter(au);}).map(this::vue).toList();
         var groupes=new LinkedHashMap<UUID,List<PriseMedicament>>();for(var p:liste)groupes.computeIfAbsent(p.getTraitement().getId(),id->new ArrayList<>()).add(p);
-        var traitements=groupes.values().stream().map(g->{var t=g.getFirst().getTraitement();return new TraitementPlanningVue(t.getId(),t.getLibelle(),t.getDateDebut(),t.getDateFin(),t.getStatut().name(),t.getConsignesGenerales(),g.stream().map(p->new PrisePlanningVue(p.getId(),p.getFrequence(),p.getHeurePrevue(),p.getFuseau(),p.joursPlanifies(),p.joursPlanifies().isEmpty(),p.getVersion())).toList());}).toList();
+        var traitements=groupes.values().stream().map(g->{var t=g.getFirst().getTraitement();return new TraitementPlanningVue(t.getId(),t.getLibelle(),t.getDateDebut(),t.getDateFin(),t.getStatut().name(),t.getConsignesGenerales(),t.getDossier().getStructure()==null,g.stream().map(p->new PrisePlanningVue(p.getId(),p.getFrequence(),p.getHeurePrevue(),p.getFuseau(),p.joursPlanifies(),p.joursPlanifies().isEmpty(),p.getVersion())).toList());}).toList();
         String version=liste.stream().map(p->p.getId()+":"+p.getVersion()+":"+p.getTraitement().getVersion()).collect(java.util.stream.Collectors.joining("|"));
         return new PlanningVue(version,du,au,traitements,occurrences);
     }

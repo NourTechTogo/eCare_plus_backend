@@ -64,7 +64,7 @@ public class CareMapper {
 
     public DossierSuiviResponse toResponse(DossierSuivi dossier) {
         return new DossierSuiviResponse(
-                dossier.getId(), dossier.getPatient().getId(), dossier.getStructure().getId(),
+                dossier.getId(), dossier.getPatient().getId(), dossier.getStructure()==null?null:dossier.getStructure().getId(),
                 dossier.getDateOuverture(), dossier.getStatut(), dossier.getResumeMedical(),
                 dossier.getFrequenceSuivi(), dossier.getProchainControle(),
                 dossier.getDateDerniereMiseAJour(), dossier.getVersion()

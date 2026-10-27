@@ -1,4 +1,17 @@
-# Validation et limites de la livraison du 25 octobre 2026
+# Validation et limites des livraisons eCare+
+
+## Phase 1 — autonomie patient, 27 octobre 2026
+
+- Backend : 186 tests validés, aucun échec, erreur ou test ignoré dans les derniers rapports de chaque classe. La suite complète PostgreSQL/H2 a été exécutée ; après adaptation de l'ancienne attente « nouveau compte sans dossier », les trois scénarios HTTP de cette classe ont été rejoués avec succès via `mvnw -o -Dtest=BackendParcoursCompletTests verify`. Aucun code de production n'a changé entre ces deux dernières exécutions.
+- La migration PostgreSQL V32 est vérifiée sur base existante V31 : conservation des dossiers institutionnels et des affectations, création des espaces personnels et unicité du dossier personnel actif. Les tests de schéma, sauvegarde/restauration et concurrence restent inclus.
+- Mobile : 177 tests réussis, 2 tests réseau optionnels ignorés ; analyse sans anomalie. Compilation web et APK Android debug réussies. Les outils Android signalent des versions Gradle/AGP/Kotlin à mettre à jour ultérieurement ; cette livraison n'effectue pas cette migration d'outillage.
+- Portail web inchangé : 41 tests réussis, 1 test réseau optionnel ignoré, compilation réussie. Vite signale toujours la taille de certains bundles.
+- Serveur local persistant : inscription fictive sans médecin, dossier personnel, tension/glycémie, réessais idempotents, traitement déclaré, confirmation/observance, refus d'accès croisés et reconnexion avec conservation des données vérifiés. Le médecin conserve l'accès à son patient affecté.
+- Flutter compilé : connexion sans affectation, planning personnel, déclaration réellement envoyée par le formulaire (HTTP 201), historique retrouvé dans une nouvelle session navigateur et affichage à 320/390 px vérifiés sans erreur de page.
+- Régressions de confidentialité : les mesures privées ne participent pas aux alertes institutionnelles ; les médicaments des déclarations personnelles ne peuvent pas être réutilisés par un professionnel ; un brouillon ne peut pas être envoyé sous un compte remplaçant la session initiale.
+
+La base H2 locale a été sauvegardée avant adaptation et redémarrage. Les tests utilisent uniquement des données fictives. La recette Android physique/iOS de cette phase, les notifications externes et le hors connexion durable restent à réaliser. Les détails de périmètre et fichiers sont dans [le bilan de phase 1](refonte/PHASE_1_AUTONOMIE_PATIENT.md).
+
 
 ## Validation des messages vocaux — 26 octobre 2026
 
