@@ -20,6 +20,7 @@ import java.util.*;
 @Service @RequiredArgsConstructor
 public class OperationSynchronisationService {
     private final EntityManager em;private final ObjectMapper json;private final Validator validation;private final AccesPatientService acces;private final PortailService portail;private final com.nourtech.ecareplus.care.infrastructure.persistence.MesureSanteRepository mesuresRepository;private final MesureSanteService mesures;private final ObservanceService observance;
+    private final OperationPersonnelleSynchronisationService personnelles;
     public record ElementCommande(String identifiantLocal,String typeOperation,int versionSchema,Instant dateCreationLocale,Map<String,Object> contenu){}
     public record ElementResultat(String identifiantLocal,String typeOperation,String statut,UUID ressourceId,Long versionServeur,String codeErreur,String message){}
     @Transactional(propagation=Propagation.REQUIRES_NEW)
@@ -47,6 +48,10 @@ public class OperationSynchronisationService {
                 var corps=new LinkedHashMap<>(element.contenu());Object occurrenceId=corps.remove("occurrenceId");
                 if(occurrenceId==null)throw new IllegalArgumentException("Occurrence requise");corps.put("sourceRef",reference);
                 var resultat=observance.confirmer(acteur,UUID.fromString(occurrenceId.toString()),json.convertValue(corps,ObservanceService.ReponsePriseCommande.class));ressource=resultat.id();version=resultat.version();
+            }
+            case "CREER_RENDEZ_VOUS", "MODIFIER_RENDEZ_VOUS", "ANNULER_RENDEZ_VOUS", "DECLARER_TRAITEMENT" -> {
+                var resultat=personnelles.traiter(element.typeOperation(),element.contenu());
+                em.flush();ressource=resultat.ressourceId();version=resultat.version();
             }
             default -> throw new IllegalArgumentException("Type d'opération non pris en charge");
         }

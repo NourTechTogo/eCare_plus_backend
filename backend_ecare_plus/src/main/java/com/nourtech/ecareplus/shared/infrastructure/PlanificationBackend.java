@@ -13,6 +13,10 @@ public class PlanificationBackend {
     private final com.nourtech.ecareplus.calling.application.service.AppelService appels;
     private final com.nourtech.ecareplus.messaging.application.service.PieceJointeService pieces;
     @Scheduled(fixedDelayString="${app.notifications.intervalle-ms:5000}") public void notifications(){notifications.traiter();}
+    private final com.nourtech.ecareplus.communication.infrastructure.notification.AgendaRappelWorker agenda;
+    @Scheduled(fixedDelayString="${app.agenda.intervalle-ms:60000}",initialDelay=10000) public void agenda(){agenda.traiter();}
+    private final com.nourtech.ecareplus.communication.infrastructure.notification.TraitementRappelWorker traitements;
+    @Scheduled(fixedDelayString="${app.rappels-traitements.intervalle-ms:60000}",initialDelay=15000) public void traitements(){traitements.traiter();}
     @Scheduled(fixedDelayString="${app.documents.nettoyage-intervalle-ms:60000}",initialDelay=60000) public void documents(){documents.nettoyer();}
     @Scheduled(fixedDelay=5000) public void appels(){appels.entretenir();}
     @Scheduled(fixedDelay=60000,initialDelay=60000) public void pieces(){pieces.nettoyer();}

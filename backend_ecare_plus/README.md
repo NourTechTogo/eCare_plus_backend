@@ -1,6 +1,8 @@
 # eCare+ Backend
 
-> Backend T1–T13 puis intégration Flutter/React réalisés le 25 octobre 2026 : [bilan actuel et limites](../docs/integration-clients/BILAN.md), [contrats API](../docs/backend/API.md), [recette initiale](../docs/backend/RECETTE.md). La validation du 27 octobre 2026 compte 186 tests réussis, dont les tests PostgreSQL, sans test ignoré. La migration V28 ajoute la prescription atomique/idempotente ; V29 ajoute l’idempotence des messages. V30 ajoute l’archivage et la suppression logique des notifications. V31 ajoute la durée serveur des messages vocaux privés. V32 ajoute le dossier personnel sans structure ; voir [la phase 1](../docs/refonte/PHASE_1_AUTONOMIE_PATIENT.md). Les sections historiques ci-dessous décrivent le socle initial ; le bilan actuel précise les raccordements clients et ce qui attend encore les fournisseurs et les appareils.
+Branche de publication : `ecare_backend_autonomie_rapports`, sans fusion dans main. Agenda, rappels, synchronisation, alertes capturées et rapports JSON/PDF : [contenu et validation](../docs/PUBLICATION_2026-10-28.md). Vérification complète : 303 tests réussis le 28 octobre 2026.
+
+> Backend T1–T13 puis intégration Flutter/React réalisés le 25 octobre 2026 : [bilan actuel et limites](../docs/integration-clients/BILAN.md), [contrats API](../docs/backend/API.md), [recette initiale](../docs/backend/RECETTE.md). La validation du 27 octobre 2026 compte 213 tests réussis, dont les tests PostgreSQL, sans test ignoré. La migration V28 ajoute la prescription atomique/idempotente ; V29 ajoute l’idempotence des messages. V30 ajoute l’archivage et la suppression logique des notifications. V31 ajoute la durée serveur des messages vocaux privés. V32 ajoute le dossier personnel sans structure ; voir [la phase 1](../docs/refonte/PHASE_1_AUTONOMIE_PATIENT.md). Les sections historiques ci-dessous décrivent le socle initial ; le bilan actuel précise les raccordements clients et ce qui attend encore les fournisseurs et les appareils.
 
 Backend de la plateforme togolaise de télésuivi eCare+, centrée dans son premier périmètre sur le diabète et l'hypertension.
 
@@ -342,3 +344,23 @@ docker compose up -d postgres
 ```
 
 L’API d’authentification est sous `/api/v1/auth`; les données appartenant au patient connecté sont sous `/api/v1/mobile` et sont toujours déterminées par le JWT.
+
+
+### Suite backend locale — rappels de traitements
+
+La tâche serveur matérialise le planning versionné et publie les rappels privés de prises du jour. La migration V34 ajoute un index d’échéance et un marqueur d’invalidation permanente des notifications obsolètes. Les clients ne sont pas modifiés dans ce lot et les envois externes nécessitent toujours un fournisseur configuré. Consulter le bilan `docs/refonte/PHASE_3_BACKEND_RAPPELS_TRAITEMENTS.md` à la racine du dépôt et `docs/VALIDATION.md` pour les résultats.
+
+
+### Synchronisation personnelle — suite backend locale
+
+Les lots de synchronisation acceptent aussi les créations/modifications/annulations de rendez-vous personnels et les déclarations de traitements, en réutilisant les références et versions des API directes. Le schéma reste en V34 ; la file persistante sur téléphone relève d’un lot mobile distinct. [Contrat et bilan](../docs/refonte/PHASE_4_BACKEND_SYNCHRONISATION.md).
+
+
+### Historique des règles d’alerte — backend local
+
+V35 ajoute la capture immuable des paramètres et de la provenance de validation pour les nouvelles alertes. Les anciennes alertes sans capture gardent leurs paramètres historiques comme inconnus ; aucun seuil médical nouveau. [Bilan et limites](../docs/refonte/PHASE_5_BACKEND_TRACABILITE_ALERTES.md).
+
+
+### Préparation de consultation — backend local
+
+V36 ajoute les synthèses personnelles JSON enregistrées, relues à l’identique et réservées au propriétaire : statistiques descriptives, traitements/réponses enregistrées, alertes capturées et agenda personnel. Aucun PDF ni diagnostic automatique dans ce lot. [Contrat et limites](../docs/refonte/PHASE_6_BACKEND_SYNTHESE_CONSULTATION.md).

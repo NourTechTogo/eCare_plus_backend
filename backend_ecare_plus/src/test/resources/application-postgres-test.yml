@@ -3,6 +3,9 @@ spring:
     url: ${ECARE_TEST_POSTGRES_URL}
     username: ${ECARE_TEST_POSTGRES_USER}
     password: ${ECARE_TEST_POSTGRES_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 1
   flyway:
     enabled: true
   jpa:

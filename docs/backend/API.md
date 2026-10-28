@@ -137,3 +137,53 @@ Le patient authentifié n'a plus besoin d'une affectation pour ses routes person
 `POST /api/v1/mobile/me/traitements` ajoute une déclaration personnelle atomique et idempotente. Le corps porte `sourceRef` UUID, `libelle`, `dateDebut`, `dateFin` facultative, `medicament:{nomCommercial,dosage,uniteDosage,forme}` et `prise:{quantite,unite,heurePrevue,fuseau,joursSemaine}` (1=lundi, 7=dimanche). Le propriétaire vient du JWT. Réponse 201 : `traitementId,medicamentId,priseId,versionPrise,fuseau,joursSemaine`. Même référence et contenu : même reçu ; autre contenu : 409.
 
 Le planning ajoute `declarationPersonnelle:boolean` à chaque traitement. Les routes d'observance et de réponse aux prises existantes sont réutilisées. Les réessais de mesures conservent le dossier initial malgré une affectation créée entre-temps. Voir [le contrat complet et les limites](../refonte/PHASE_1_AUTONOMIE_PATIENT.md).
+
+## Agenda personnel et rappels serveur (V33, travaux locaux)
+
+Nouvelles routes patient, propriétaire imposé par le JWT et consentement requis :
+
+- `GET /api/v1/mobile/me/rendez-vous` : page personnelle ; `du`/`au` Instant requis ensemble, intervalle `[du, au[` limité à 366 jours ; `inclureAnnules=true` pour l'historique annulé. Tri date/identifiant, 100 éléments maximum par page.
+- `GET /api/v1/mobile/me/rendez-vous/{id}` : détail privé.
+- `POST /api/v1/mobile/me/rendez-vous` : `{sourceRef:UUID,motif,dateHeure:Instant,fuseau:IANA,lieu?,professionnelNom?,commentaire?,rappelMinutes?}`, réponse 201.
+- `PATCH /api/v1/mobile/me/rendez-vous/{id}` : mêmes informations et `version` courante, avec nouvelle référence de commande, réponse 200.
+- `DELETE /api/v1/mobile/me/rendez-vous/{id}` ou `POST /api/v1/mobile/me/rendez-vous/{id}/annulation` : corps `{sourceRef:UUID,version}`, annulation logique, réponse 200.
+
+Réessai identique : reçu initial ; autre contenu/action avec la même référence : 409 ; version périmée : 409. `rappelMinutes:null` désactive le rappel, 0 le programme à l'heure de l'événement, maximum technique 10080. Aucun créneau médical n'est réservé par ces routes.
+
+Le scheduler publie une notification privée `RENDEZ_VOUS` ciblant `RENDEZ_VOUS_PERSONNEL`, et utilise la distribution existante sous réserve de configuration fournisseur/terminal. Les routes professionnelles n'exposent pas l'agenda personnel. [Contrat détaillé et limites de livraison](../refonte/PHASE_2_BACKEND_AGENDA.md).
+
+
+## Rappels de prises — backend local
+
+Les échéances du jour local produisent des notifications patient `typeNotification=TRAITEMENT`, `typeRessource=PRISE`, `ressourceId=occurrenceId`. La source est stable par occurrence et échéance. Une réponse ou un changement du planning invalide l’ancien rappel. Aucun statut de prise n’est déduit automatiquement.
+
+`GET /api/v1/mobile/me/prises/{occurrenceId}` retourne OccurrenceVue pour le patient propriétaire uniquement. Authentification et consentement SUIVI_MEDICAL requis. Ce point d’entrée complète le planning et la réponse existants ; il n’ajoute aucun droit professionnel sur un dossier personnel.
+
+Détails et limites : [rappels de traitements](../refonte/PHASE_3_BACKEND_RAPPELS_TRAITEMENTS.md).
+
+
+## Synchronisation du suivi personnel — backend local
+
+`POST /api/v1/mobile/me/synchronisations` prend aussi en charge CREER_RENDEZ_VOUS, MODIFIER_RENDEZ_VOUS, ANNULER_RENDEZ_VOUS et DECLARER_TRAITEMENT en versionSchema=1. Le contenu reprend les DTO des routes directes, avec sourceRef UUID obligatoire et rendezVousId pour modification/annulation. Réutiliser cette référence métier entre les transports direct/lot. Un réessai conserve identifiantAppareil, identifiantLocal, typeOperation, dateCreationLocale et contenu.
+
+Chaque élément a un résultat SUCCES, CONFLIT ou REJETE, dans sa propre transaction. ressourceId/versionServeur concernent le rendez-vous ou le traitement déclaré, pas la prise. Les autres types et les anciens reçus restent compatibles.
+
+Contrat, exemple et limites : [synchronisation personnelle](../refonte/PHASE_4_BACKEND_SYNCHRONISATION.md).
+
+
+## Capture historique des règles d’alerte — V35
+
+Les vues d’alerte mobile/portail et AlerteResponse ajoutent regleAppliquee (paramètres indépendants de la règle, version technique et provenance de validation). Les seuils affichés dans les vues proviennent de cette capture, pas de la règle actuelle. Le champ est null pour un historique sans capture ou une alerte sans règle ; les seuils historiques inconnus restent nulls.
+
+RegleAlerteResponse ajoute validateurId/sourceValidation. Modifier les paramètres, la portée ou le contexte efface ces métadonnées avec dateValidation et désactive la règle. Les droits restent identiques. DEMONSTRATION n’est pas une validation médicale de production.
+
+[Bilan et limites](../refonte/PHASE_5_BACKEND_TRACABILITE_ALERTES.md).
+
+
+## Synthèse personnelle de consultation — V36
+
+POST `/api/v1/mobile/me/rapports-consultation` avec `{sourceRef: UUID, du: YYYY-MM-DD, au: YYYY-MM-DD, fuseau: IANA}`. Période inclusive 1 à 90 jours, fin au plus aujourd’hui. Réponse 201 : SyntheseConsultationVue (versionSchema=1). Même référence/demande renvoie la même synthèse ; demande différente avec même référence donne 409.
+
+GET collection : métadonnées paginées, 50 maximum. GET `/{id}` : contenu enregistré, propriétaire JWT et consentement contrôlés. Aucun partage professionnel implicite. JSON réel, sans fichier PDF ni URL inventée.
+
+[Bilan, rubriques et limites](../refonte/PHASE_6_BACKEND_SYNTHESE_CONSULTATION.md).

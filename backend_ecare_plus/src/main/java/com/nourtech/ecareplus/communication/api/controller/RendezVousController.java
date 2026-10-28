@@ -54,7 +54,7 @@ public class RendezVousController {
         var professionnel=(ProfessionnelSante)acces.acteur();
         var resultats=em.createQuery("""
                 select r from RendezVous r join fetch r.patient p
-                where (:patient is null or p.id=:patient) and p.statutCompte=:compte
+                where r.personnel=false and (:patient is null or p.id=:patient) and p.statutCompte=:compte
                 and exists (select a.id from AffectationPatient a where a.patient=p
                     and a.professionnel.id=:professionnel and a.structure.id=:structure
                     and a.statut=:affectation and a.dateDebut<=:jour

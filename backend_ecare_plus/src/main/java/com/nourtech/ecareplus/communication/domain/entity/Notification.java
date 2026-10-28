@@ -50,11 +50,19 @@ public class Notification extends AbstractEntity {
     private Instant dateLecture;
     private Instant dateArchivage;
     private Instant dateSuppression;
+    private Instant dateInvalidation;
 
     public void archiver(Instant maintenant) { if(dateArchivage==null) dateArchivage=Objects.requireNonNull(maintenant); }
     public void desarchiver() { dateArchivage=null; }
     public void supprimerDeLaBoite(Instant maintenant) { if(dateSuppression==null) dateSuppression=Objects.requireNonNull(maintenant); }
-    public void restaurerDansLaBoite() { dateSuppression=null; }
+    public void invalider(Instant maintenant) {
+        if(dateInvalidation==null)dateInvalidation=Objects.requireNonNull(maintenant);
+        supprimerDeLaBoite(maintenant);
+    }
+    public void restaurerDansLaBoite() {
+        if(dateInvalidation!=null)throw new IllegalStateException("Ce rappel est devenu obsolète et ne peut pas être restauré");
+        dateSuppression=null;
+    }
 
 
     @Enumerated(EnumType.STRING)
@@ -67,7 +75,7 @@ public class Notification extends AbstractEntity {
     public void lierSource(String source){sourceRef=source;}
     @Column(length=40) private String typeRessource;
     private java.util.UUID ressourceId;
-    public void rattacherRessource(String type,java.util.UUID id){if(id==null||!java.util.Set.of("ALERTE","CONVERSATION","TRAITEMENT","APPEL").contains(type))throw new IllegalArgumentException("Cible de notification invalide");typeRessource=type;ressourceId=id;}
+    public void rattacherRessource(String type,java.util.UUID id){if(id==null||!java.util.Set.of("ALERTE","CONVERSATION","TRAITEMENT","APPEL","RENDEZ_VOUS_PERSONNEL","PRISE").contains(type))throw new IllegalArgumentException("Cible de notification invalide");typeRessource=type;ressourceId=id;}
 
     public Notification(
             Utilisateur utilisateur,

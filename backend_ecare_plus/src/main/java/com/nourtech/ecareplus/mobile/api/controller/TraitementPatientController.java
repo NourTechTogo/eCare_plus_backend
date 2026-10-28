@@ -22,6 +22,8 @@ public class TraitementPatientController {
     public PlanningTraitementService.PrisePlanningVue configurer(@PathVariable UUID priseId,@RequestBody PlanningTraitementService.PlanningCommande commande){return planning.configurer(acces.acteurId(),priseId,commande);}
     @GetMapping({"/mobile/me/prises","/portail/patients/{patientId}/prises"})
     public List<PlanningTraitementService.OccurrenceVue> historique(@PathVariable(required=false) UUID patientId,@RequestParam LocalDate du,@RequestParam LocalDate au){var acteur=acces.acteurId();return observance.historique(acteur,patientId==null?acteur:patientId,du,au);}
+    @GetMapping("/mobile/me/prises/{occurrenceId}")
+    public PlanningTraitementService.OccurrenceVue occurrence(@PathVariable UUID occurrenceId){return observance.consulterOccurrence(acces.acteurId(),occurrenceId);}
     @PostMapping("/mobile/me/prises/{occurrenceId}/reponse")
     public PlanningTraitementService.OccurrenceVue repondre(@PathVariable UUID occurrenceId,@RequestBody ObservanceService.ReponsePriseCommande commande){return observance.confirmer(acces.acteurId(),occurrenceId,commande);}
     @GetMapping({"/mobile/me/observance","/portail/patients/{patientId}/observance"})

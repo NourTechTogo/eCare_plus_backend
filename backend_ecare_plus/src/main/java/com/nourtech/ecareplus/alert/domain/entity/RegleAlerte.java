@@ -80,8 +80,7 @@ public class RegleAlerte extends AbstractEntity {
 
     public void definirContexte(String contexte) {
         this.contexteMesure = normaliser(contexte);
-        this.dateValidation = null;
-        this.actif = false;
+        invaliderValidation();
     }
 
     public boolean contexteApplicable(String contexte) {
@@ -129,8 +128,7 @@ public class RegleAlerte extends AbstractEntity {
         this.structureId = structureId;
         this.composante = component;
         this.unite = unit;
-        this.dateValidation = null;
-        this.actif = false;
+        invaliderValidation();
     }
 
     public BigDecimal valeurEvaluee(MesureSante mesure) {
@@ -152,8 +150,11 @@ public class RegleAlerte extends AbstractEntity {
         this.nombreOccurrences = positif(nombreOccurrences, "nombreOccurrences");
         this.periodeObservation = positif(periodeObservation, "periodeObservation");
         // Une modification des paramètres d'évaluation invalide la validation médicale précédente.
-        this.dateValidation = null;
-        this.actif = false;
+        invaliderValidation();
+    }
+
+    private void invaliderValidation(){
+        dateValidation=null;validateurId=null;sourceValidation=null;actif=false;
     }
 
     public void validerRegle(Instant maintenant) {

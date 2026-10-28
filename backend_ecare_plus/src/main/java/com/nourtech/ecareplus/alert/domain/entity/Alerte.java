@@ -45,6 +45,9 @@ public class Alerte extends AbstractEntity {
     @JoinColumn(name = "regle_id")
     private RegleAlerte regle;
 
+    @jakarta.persistence.Embedded
+    private InstantaneRegleAlerte regleAppliquee;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "professionnel_id")
     private ProfessionnelSante professionnel;
@@ -107,6 +110,7 @@ public class Alerte extends AbstractEntity {
         this.patient = Objects.requireNonNull(patient, "patient");
         this.mesure = mesure;
         this.regle = regle;
+        this.regleAppliquee = regle==null?null:new InstantaneRegleAlerte(regle);
         this.typeAlerte = Objects.requireNonNull(typeAlerte, "typeAlerte");
         this.origine = Objects.requireNonNull(origine, "origine");
         this.titre = obligatoire(titre, "titre");

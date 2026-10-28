@@ -167,11 +167,15 @@ public class AutorisationRessources {
             }
             case InterventionSuivi i -> verifierEntite(i.getAlerte(), actor, true, read);
             case Rappel r -> {
+                require(r.getAgendaPersonnelId()==null);
                 patient(r.getPatient(), actor, true);
                 if (r.getPriseMedicament() != null) verifierEntite(r.getPriseMedicament(), actor, true, read);
             }
-            case RendezVous r -> patient(r.getPatient(), actor, true);
-            case Notification n -> verifierEntite(Hibernate.unproxy(n.getUtilisateur()), actor, true, read);
+            case RendezVous r -> { require(!r.isPersonnel()); patient(r.getPatient(), actor, true); }
+            case Notification n -> {
+                if(java.util.Set.of("RENDEZ_VOUS_PERSONNEL","PRISE").contains(java.util.Objects.requireNonNullElse(n.getTypeRessource(),"")))require(n.getUtilisateur().getId().equals(actor.getId()));
+                verifierEntite(Hibernate.unproxy(n.getUtilisateur()), actor, true, read);
+            }
             case Patient p -> patient(p, actor, clinical);
             case ProfessionnelSante p -> structure(p.getStructure(), actor);
             case AdministrateurStructure a -> structure(a.getStructure(), actor);

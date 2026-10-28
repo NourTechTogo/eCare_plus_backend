@@ -21,7 +21,8 @@ import java.util.Objects;
 @Getter
 @Entity
 @Table(name = "confirmation_prise", uniqueConstraints=@jakarta.persistence.UniqueConstraint(name="uq_confirmation_initiale",columnNames={"prise_medicament_id","date_initiale"}), indexes = {
-        @Index(name = "idx_confirmation_prise", columnList = "prise_medicament_id")
+        @Index(name = "idx_confirmation_prise", columnList = "prise_medicament_id"),
+        @Index(name = "idx_confirmation_echeance", columnList = "date_prevue,statut,annulee")
 })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ConfirmationPrise extends AbstractEntity {

@@ -54,6 +54,29 @@ public class RendezVous extends AbstractEntity {
     @Column(columnDefinition = "text")
     private String commentaire;
 
+    @Column(nullable=false,columnDefinition="boolean default false") private boolean personnel;
+    @Column(length=80) private String fuseau;
+    @Column(length=200) private String professionnelNom;
+    private Integer rappelMinutes;
+    @jakarta.persistence.OneToOne(fetch=FetchType.LAZY)
+    @JoinColumn(name="rappel_id",unique=true) private Rappel rappel;
+
+    public static RendezVous personnel(Patient patient,String motif,Instant date,String fuseau,String lieu,String professionnelNom,String commentaire) {
+        var rdv=new RendezVous(patient,motif,date.truncatedTo(java.time.temporal.ChronoUnit.MICROS),lieu,"PERSONNEL",commentaire);
+        rdv.personnel=true;rdv.fuseau=fuseau;rdv.professionnelNom=normaliser(professionnelNom);return rdv;
+    }
+    public void modifierPersonnel(String motif,Instant date,String fuseau,String lieu,String professionnelNom,String commentaire) {
+        verifierModifiable();if(!personnel)throw new IllegalStateException("Événement non personnel");
+        this.motif=obligatoire(motif,"motif");this.dateHeure=Objects.requireNonNull(date).truncatedTo(java.time.temporal.ChronoUnit.MICROS);
+        this.fuseau=fuseau;this.lieu=normaliser(lieu);this.professionnelNom=normaliser(professionnelNom);
+        this.commentaire=normaliser(commentaire);this.statut=StatutRendezVous.REPORTE;
+    }
+    public void rattacherRappel(Rappel rappel,Integer minutes) {
+        if(!personnel)throw new IllegalStateException("Événement non personnel");
+        if(rappel!=null&&!rappel.getPatient().memeIdentiteQue(patient))throw new IllegalArgumentException("Rappel d'un autre patient");
+        this.rappel=rappel;this.rappelMinutes=minutes;
+    }
+
     public RendezVous(Patient patient, String motif, Instant dateHeure, String lieu, String typeRendezVous, String commentaire) {
         this.patient = Objects.requireNonNull(patient, "patient");
         this.motif = obligatoire(motif, "motif");

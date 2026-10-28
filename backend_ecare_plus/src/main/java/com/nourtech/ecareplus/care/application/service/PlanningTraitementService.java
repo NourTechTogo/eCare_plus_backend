@@ -20,6 +20,7 @@ public class PlanningTraitementService {
     private final AccesPatientService acces;private final PriseMedicamentRepository prises;private final ConfirmationPriseRepository confirmations;private final EntityManager em;
     private final com.nourtech.ecareplus.communication.application.service.ChangementTraitementService changements;
     private final PlanningHistoriqueService historique;
+    private final OccurrenceTraitementService occurrences;
     public record OccurrenceVue(UUID id,UUID traitementId,UUID priseId,Instant prevueLe,Instant reporteeAu,BigDecimal quantite,String unite,String medicament,String dosage,String uniteDosage,String forme,String voieAdministration,String statut,boolean annulee,long version,String fuseau,Instant dateActionClient,Instant dateConfirmation){}
     public record TraitementPlanningVue(UUID id,String libelle,LocalDate dateDebut,LocalDate dateFin,String statut,String consignes,boolean declarationPersonnelle,List<PrisePlanningVue> prises){}
     public record PrisePlanningVue(UUID id,String frequence,LocalTime heurePrevue,String fuseau,Set<Integer> joursSemaine,boolean configurationRequise,long version){}
@@ -28,13 +29,7 @@ public class PlanningTraitementService {
     public PlanningVue consulter(UUID acteurId,UUID patientId,LocalDate du,LocalDate au){
         verifierPeriode(du,au);acces.verifier(acteurId,patientId);em.find(Patient.class,patientId,LockModeType.PESSIMISTIC_WRITE);
         UUID structure=acces.structureClinique();var liste=prises.planningPatientStructure(patientId,structure);
-        var existantes=new HashSet<String>();for(var c:confirmations.periodeStructure(patientId,structure,debut(du),fin(au)))existantes.add(c.getPriseMedicament().getId()+":"+c.getDateInitiale());
-        for(var p:liste)for(var revision:historique.revisions(p)){var instantane=historique.lire(revision);
-            for(LocalDate jour=du;!jour.isAfter(au);jour=jour.plusDays(1)){
-                if(!instantane.prevu(jour))continue;Instant date=instantane.date(jour);
-                if(revision.applicable(date)&&existantes.add(p.getId()+":"+date)){var occurrence=new ConfirmationPrise(p,date);occurrence.appliquerInstantane(instantane);confirmations.save(occurrence);}
-            }
-        }
+        occurrences.materialiser(patientId,structure,du,au,liste);
         confirmations.flush();var occurrences=confirmations.periodeStructure(patientId,structure,debut(du),fin(au)).stream().filter(c->{var jour=c.getDateInitiale().atZone(ZoneId.of(Objects.requireNonNullElse(c.getFuseauPrevu(),c.getPriseMedicament().getFuseau()))).toLocalDate();return !jour.isBefore(du)&&!jour.isAfter(au);}).map(this::vue).toList();
         var groupes=new LinkedHashMap<UUID,List<PriseMedicament>>();for(var p:liste)groupes.computeIfAbsent(p.getTraitement().getId(),id->new ArrayList<>()).add(p);
         var traitements=groupes.values().stream().map(g->{var t=g.getFirst().getTraitement();return new TraitementPlanningVue(t.getId(),t.getLibelle(),t.getDateDebut(),t.getDateFin(),t.getStatut().name(),t.getConsignesGenerales(),t.getDossier().getStructure()==null,g.stream().map(p->new PrisePlanningVue(p.getId(),p.getFrequence(),p.getHeurePrevue(),p.getFuseau(),p.joursPlanifies(),p.joursPlanifies().isEmpty(),p.getVersion())).toList());}).toList();

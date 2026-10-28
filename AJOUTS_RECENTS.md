@@ -1,5 +1,68 @@
 # Ajouts et corrections récents — Backend eCare+
 
+## Publication sur la nouvelle branche - 28 octobre 2026
+
+Contenu regroupé sur `ecare_backend_autonomie_rapports`, sans fusion dans main. Vérification prépublication complète : **303 tests réussis**, aucun échec/erreur/ignoré ; paquet Spring Boot compilé à 2026-10-28T09:28:36Z. Voir [le bilan de publication](docs/PUBLICATION_2026-10-28.md). Les mentions « travail local / aucun push » des phases antérieures décrivent leur état avant cette publication.
+
+## 27 octobre 2026 - export PDF personnel de consultation (travail local)
+
+- Téléchargement authentifié du PDF depuis une synthèse JSON enregistrée, sans relire les données cliniques ni changer le rapport d'origine.
+- Mesures et graphiques descriptifs, annexe de toutes les valeurs, traitements/prises, alertes et règles capturées, agenda et avertissements.
+- PDF A4 paginé avec polices embarquées ; confidentialité patient/consentement, refus explicite des exports trop longs et absence de lien public.
+- Backend uniquement, interfaces inchangées, aucun commit ni push.
+
+[Contrat et limites](docs/refonte/PHASE_7_BACKEND_EXPORT_PDF.md). Résultats datés dans [la validation](docs/VALIDATION.md).
+
+## 27 octobre 2026 — synthèse personnelle de consultation (travail local)
+
+- Génération d’une synthèse JSON enregistrée : mesures/statistiques descriptives, traitements et réponses enregistrées, alertes avec règles capturées, agenda personnel.
+- Période/fuseau contrôlés, contenu figé, référence idempotente, accès propriétaire et consentement sans affectation médicale obligatoire.
+- Migration V36 additive, anciens rapports conservés, limites de volume sans troncature silencieuse.
+- Aucun diagnostic ou seuil nouveau, aucun PDF fictif. Mobile/web inchangés, aucun commit/push.
+
+[Bilan et contrat](docs/refonte/PHASE_6_BACKEND_SYNTHESE_CONSULTATION.md). Validation finale : 294 tests réussis, compilation et recette API locale validées.
+
+## 27 octobre 2026 — traçabilité des alertes (travail local)
+
+- Capture immuable de la règle associée aux nouvelles alertes : paramètres, version technique et origine de validation.
+- Correction des anciennes alertes dont le seuil affiché changeait avec la règle actuelle.
+- Réinitialisation de la date, de l’auteur et de la source de validation après modification d’une règle.
+- Migration V35 additive : pas de reconstruction inventée des paramètres d’alertes historiques.
+- Aucun seuil médical ajouté, mobile/web inchangés, aucun commit/push.
+
+[Bilan](docs/refonte/PHASE_5_BACKEND_TRACABILITE_ALERTES.md). Validation finale : 271 tests réussis, compilation et recette API validées. Identifiants de démonstration conservés.
+
+## 27 octobre 2026 — synchronisation personnelle (travail local)
+
+- Ajout des opérations de création/modification/annulation de rendez-vous personnels et de déclaration de traitements aux lots de synchronisation.
+- Réutilisation des services métier existants, des contrôles de propriété, des versions et des références idempotentes communes aux envois directs et par lot.
+- Résultat indépendant par élément ; un fuseau ou une date invalide ne doit pas bloquer les autres commandes ni laisser de traitement partiel.
+- La file persistante sur téléphone reste pour le lot mobile. Aucun changement des clients, aucune migration supplémentaire, aucun commit/push.
+
+[Bilan et contrat](docs/refonte/PHASE_4_BACKEND_SYNCHRONISATION.md). Validation finale : 259 tests réussis et compilation réussie ; recette API validée. Un test de transport existant a nécessité un recontrôle, documenté dans docs/VALIDATION.md.
+
+## 27 octobre 2026 — rappels de traitements (travail local)
+
+- Génération serveur des occurrences, sans consultation préalable du planning et sans affectation obligatoire à un médecin.
+- Rappel privé par occurrence/échéance du jour local, avec contrôles compte, consentement et planning actif ; aucun statut de prise déduit automatiquement.
+- Réponses PRIS/IGNORER/REPORTER et modifications du planning : invalidation des anciens rappels et annulation des envois persistés ; anciennes routes cliniques également couvertes.
+- Distinction entre suppression utilisateur réversible et invalidation permanente d’un rappel obsolète, y compris s’il avait déjà été supprimé.
+- Route privée GET `/api/v1/mobile/me/prises/{occurrenceId}`, migration V34 et tests H2/PostgreSQL.
+- Mobile/web inchangés pour ce lot. Aucun commit ni push.
+
+Détails : [rappels de traitements](docs/refonte/PHASE_3_BACKEND_RAPPELS_TRAITEMENTS.md). Validation complète : 239 tests réussis et compilation réussie ; résultats dans [VALIDATION](docs/VALIDATION.md).
+
+
+## Travaux locaux — agenda personnel backend, 27 octobre 2026
+
+- Agenda personnel persistant : création, liste paginée, consultation, modification et annulation logique sans médecin obligatoire.
+- Fuseau IANA, rappel facultatif, versions et reçus idempotents ; les événements personnels restent exclus des accès professionnels.
+- Scheduler de rappels : publication privée unique, reprogrammation/annulation invalidant les notifications et envois obsolètes. Provenance permanente des anciens rappels.
+- Correction du droit de distribution au patient lui-même : consentement et terminal restent vérifiés sans affectation médicale requise.
+- Migration V33 et restauration des rendez-vous/rappels historiques et personnels vérifiées. Aucun cycle de clés étrangères entre agenda et rappel.
+- **213 tests backend réussis, aucun ignoré**, compilation/package réussis ; recette réelle du scheduler sur l'API locale, sans push externe.
+- Aucun changement Flutter/React, aucun commit ou push de cet incrément. [Contrat et limites](docs/refonte/PHASE_2_BACKEND_AGENDA.md).
+
 ## Phase 1 — patient autonome, 27 octobre 2026
 
 - Dossier personnel sans structure dès l'inscription ; migration V32 conservant les dossiers et affectations existants.

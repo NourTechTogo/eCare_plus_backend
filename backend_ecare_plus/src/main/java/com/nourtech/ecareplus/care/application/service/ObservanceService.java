@@ -17,6 +17,7 @@ import java.util.*;
 public class ObservanceService {
     private final AccesPatientService acces;private final PlanningTraitementService planning;private final ConfirmationPriseRepository confirmations;
     private final ReponsePriseOperationRepository operations;private final EntityManager em;private final ObjectMapper json;
+    private final NotificationPriseService rappels;
     public record ReponsePriseCommande(String action,Instant reporteeAu,Instant dateAction,String sourceRef,long version){}
     public record ObservanceVue(long prisesPrevues,long prisesConfirmees,long prisesIgnorees,long prisesNonConfirmees,Double taux){}
     public PlanningTraitementService.OccurrenceVue confirmer(UUID acteur,UUID occurrenceId,ReponsePriseCommande commande){
@@ -35,8 +36,16 @@ public class ObservanceService {
             case "REPORTER" -> occurrence.reporter(commande.reporteeAu());
             default -> throw new IllegalArgumentException("Action attendue : PRIS, REPORTER ou IGNORER");
         }
+        rappels.invalider(occurrence);
         occurrence.actionClient(commande.dateAction());confirmations.flush();var resultat=planning.vue(occurrence);
         operations.save(new ReponsePriseOperation(acteur,commande.sourceRef(),requete,json.writeValueAsString(resultat)));return resultat;
+    }
+    public PlanningTraitementService.OccurrenceVue consulterOccurrence(UUID acteur,UUID id){
+        var c=confirmations.findById(id).orElseThrow(()->new RessourceIntrouvableException("Occurrence",id));
+        UUID patient=c.getPriseMedicament().getTraitement().getDossier().getPatient().getId();
+        acces.verifier(acteur,patient);
+        if(!acteur.equals(patient))throw new org.springframework.security.access.AccessDeniedException("Lecture réservée au patient");
+        return planning.vue(c);
     }
     public List<PlanningTraitementService.OccurrenceVue> historique(UUID acteur,UUID patient,LocalDate du,LocalDate au){return planning.consulter(acteur,patient,du,au).occurrences();}
     public ObservanceVue calculer(UUID acteur,UUID patient,LocalDate du,LocalDate au){

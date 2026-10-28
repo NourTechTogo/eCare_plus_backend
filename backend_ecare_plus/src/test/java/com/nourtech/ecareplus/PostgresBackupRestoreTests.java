@@ -30,6 +30,13 @@ class PostgresBackupRestoreTests {
             try(var c=DriverManager.getConnection(url,user,password);var s=c.prepareStatement("INSERT INTO "+source+".document_medical(id,version,date_creation,date_modification,patient_id,auteur_id,type_document,titre,date_document,nom_original,type_mime,taille_octets,cle_stockage,source_ref,empreinte,fichier_supprime) VALUES (?,0,now(),now(),'00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000002','AUTRE','Fixture','2026-01-01','fixture.pdf','application/pdf',?,?,'backup-fixture',?,false)")){
                 s.setObject(1,UUID.randomUUID());s.setLong(2,DocumentMedicalIntegrationTests.PDF.length);s.setString(3,cle);s.setString(4,com.nourtech.ecareplus.shared.application.Empreintes.sha256("fixture"));s.executeUpdate();
             }
+            // Restore real personal agenda data as well as the historical fixture.
+            // Reminder provenance is opaque; the appointment has the only FK between these tables.
+            try(var c=DriverManager.getConnection(url,user,password);var s=c.createStatement()){
+                s.execute("SET search_path TO "+source);
+                s.executeUpdate("INSERT INTO rappel(id,version,date_creation,date_modification,patient_id,type_rappel,titre,message,date_heure_prevue,frequence,statut,canal,agenda_personnel_id) VALUES ('00000000-0000-0000-0000-000000000034',7,now(),now(),'00000000-0000-0000-0000-000000000002','RENDEZ_VOUS','Agenda fictif','Rappel privé','2035-06-12T09:00:00Z','AUCUNE','PLANIFIE','APPLICATION','00000000-0000-0000-0000-000000000033')");
+                s.executeUpdate("INSERT INTO rendez_vous(id,version,date_creation,date_modification,patient_id,motif,date_heure,type_rendez_vous,statut,personnel,fuseau,rappel_minutes,rappel_id) VALUES ('00000000-0000-0000-0000-000000000033',9,now(),now(),'00000000-0000-0000-0000-000000000002','Agenda privé','2035-06-12T10:00:00Z','PERSONNEL','PLANIFIE',true,'Africa/Lome',60,'00000000-0000-0000-0000-000000000034')");
+            }
             List<TableCopie> sauvegarde;
             try(var c=DriverManager.getConnection(url,user,password)){c.setAutoCommit(false);c.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);sauvegarde=lire(c,source);c.commit();}
             Path donnees=dossier.resolve("donnees.json");json.writeValue(donnees.toFile(),sauvegarde);

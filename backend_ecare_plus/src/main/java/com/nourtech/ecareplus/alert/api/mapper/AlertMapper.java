@@ -33,7 +33,8 @@ public class AlertMapper {
                 regle.getOperateur(), regle.getSeuilMin(), regle.getSeuilMax(), regle.getNombreOccurrences(),
                 regle.getPeriodeObservation(), regle.getNiveauPriorite(), regle.isActif(),
                 regle.getDateValidation(), regle.getVersion(), regle.getPatientId(), regle.getStructureId(),
-                regle.getComposante(), regle.getUnite(), regle.getContexteMesure()
+                regle.getComposante(), regle.getUnite(), regle.getContexteMesure(),
+                regle.getValidateurId(),regle.getSourceValidation()
         );
     }
 
@@ -52,7 +53,8 @@ public class AlertMapper {
                 alerte.getProfessionnel() != null ? alerte.getProfessionnel().getId() : null,
                 alerte.getTypeAlerte(), alerte.getOrigine(), alerte.getTitre(), alerte.getDescription(), alerte.getNiveauPriorite(),
                 alerte.getStatut(), alerte.getDatePriseEnCharge(), alerte.getDateCloture(),
-                alerte.getMotifCloture(), alerte.getVersion()
+                alerte.getMotifCloture(), alerte.getVersion(),
+                com.nourtech.ecareplus.alert.api.dto.response.RegleAppliqueeVue.depuis(alerte.getRegleAppliquee())
         );
     }
 

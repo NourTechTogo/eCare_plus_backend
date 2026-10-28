@@ -23,6 +23,7 @@ public record AlerteResponse(
         Instant datePriseEnCharge,
         Instant dateCloture,
         String motifCloture,
-        long version
+        long version,
+        RegleAppliqueeVue regleAppliquee
 ) {
 }

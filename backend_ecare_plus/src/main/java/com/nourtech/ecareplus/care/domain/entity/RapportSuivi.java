@@ -21,7 +21,7 @@ import java.util.Objects;
 
 @Getter
 @Entity
-@Table(name = "rapport_suivi", indexes = {
+@Table(name = "rapport_suivi", uniqueConstraints=@jakarta.persistence.UniqueConstraint(name="uq_rapport_synthese_source",columnNames={"dossier_id","source_ref_synthese"}), indexes = {
         @Index(name = "idx_rapport_dossier", columnList = "dossier_id")
 })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -55,6 +55,16 @@ public class RapportSuivi extends AbstractEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private StatutRapport statut;
+
+    @Column(columnDefinition="text",updatable=false) private String contenuSynthese;
+    @Column(updatable=false) private java.util.UUID sourceRefSynthese;
+    @Column(length=64,updatable=false) private String empreinteSynthese;
+    @Column(length=80,updatable=false) private String fuseauSynthese;
+
+    public void publierSynthese(java.util.UUID reference,String empreinte,String fuseau,String contenu){
+        if(statut!=StatutRapport.EN_COURS||contenuSynthese!=null||!"JSON".equals(format))throw new IllegalStateException("Cette synthèse ne peut plus être modifiée");
+        sourceRefSynthese=Objects.requireNonNull(reference);empreinteSynthese=obligatoire(empreinte,"empreinte");fuseauSynthese=obligatoire(fuseau,"fuseau");contenuSynthese=obligatoire(contenu,"contenu");statut=StatutRapport.GENERE;
+    }
 
     public RapportSuivi(DossierSuivi dossier, String titre, LocalDate dateDebut, LocalDate dateFin, String resume, String format) {
         this.dossier = Objects.requireNonNull(dossier, "dossier");

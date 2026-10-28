@@ -349,11 +349,13 @@ public class PortailService  {
         v.put("valeurPrincipale",m==null?null:m.getValeurPrincipale());
         v.put("valeurSecondaire",m==null?null:m.getValeurSecondaire());
         v.put("unite",m==null?null:m.getUnite());
-        v.put("seuil",a.getRegle()==null?null:a.getRegle().getSeuilMin());
-        v.put("seuilMin",a.getRegle()==null?null:a.getRegle().getSeuilMin());
-        v.put("seuilMax",a.getRegle()==null?null:a.getRegle().getSeuilMax());
-        v.put("operateur",a.getRegle()==null?null:a.getRegle().getOperateur());
-        v.put("composante",a.getRegle()==null?null:a.getRegle().getComposante());
+        var capture=a.getRegleAppliquee();
+        v.put("regleAppliquee",com.nourtech.ecareplus.alert.api.dto.response.RegleAppliqueeVue.depuis(capture));
+        v.put("seuil",capture==null?null:capture.getSeuilMin());
+        v.put("seuilMin",capture==null?null:capture.getSeuilMin());
+        v.put("seuilMax",capture==null?null:capture.getSeuilMax());
+        v.put("operateur",capture==null?null:capture.getOperateur());
+        v.put("composante",capture==null?null:capture.getComposante());
         v.put("niveauPriorite",a.getNiveauPriorite());
         v.put("gravite",a.getNiveauPriorite()==com.nourtech.ecareplus.alert.domain.enumeration.NiveauPriorite.CRITIQUE?"CRITIQUE":"ATTENTION");
         v.put("statutSuivi",switch(a.getStatut()){case NOUVELLE -> "NOUVELLE";case CLOTUREE -> "TRAITEE";default -> "VUE";});

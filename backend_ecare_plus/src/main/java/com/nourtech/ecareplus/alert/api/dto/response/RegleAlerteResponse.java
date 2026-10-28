@@ -25,6 +25,8 @@ public record RegleAlerteResponse(
         UUID structureId,
         String composante,
         String unite,
-        String contexteMesure
+        String contexteMesure,
+        UUID validateurId,
+        String sourceValidation
 ) {
 }

@@ -72,6 +72,13 @@ public class Rappel extends AbstractEntity {
     /** Read status belongs to the latest occurrence, not the recurring schedule. */
     private Instant derniereLecture;
 
+    private java.util.UUID agendaPersonnelId;
+    public void rattacherAgendaPersonnel(java.util.UUID rendezVousId) {
+        if(agendaPersonnelId!=null)throw new IllegalStateException("Origine du rappel déjà définie");
+        if(typeRappel!=TypeRappel.RENDEZ_VOUS)throw new IllegalStateException("Type de rappel incompatible");
+        agendaPersonnelId=Objects.requireNonNull(rendezVousId);
+    }
+
     public Rappel(
             Patient patient,
             PriseMedicament priseMedicament,
